@@ -418,9 +418,9 @@ function i18n(core) {
         });
     });
 
-    for(var i = 0; i < 20; i++) {
-        self.translate(i.toString(),'','en');
-    }
+//    for(var i = 0; i < 20; i++) {
+//        self.translate(i.toString(),'','en');
+//    }
 }
 
 util.inherits(i18n, events.EventEmitter);
