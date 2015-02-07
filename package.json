@@ -1,0 +1,46 @@
+{
+  "name": "zetta-i18n",
+  "description": "Zetta Toolkit - Site Translation",
+  "version": "0.0.1",
+  "author": {
+    "name": "ASPECTRON Inc.",
+    "email": "info@aspectron.com"
+  },
+  "dependencies": {
+    "underscore" : "*",
+    "ejs" : "*",
+    "basic-auth" : "*"
+  },
+  "keywords": [
+    "utilities",
+    "framework",
+    "json",
+    "rpc",
+    "zetta",
+    "translation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aspectron/zetta-i18n"
+  },
+  "main": "zetta-i18n",
+  "files": [
+    "README.md",
+    "zetta-i18n.js",
+    "views",
+    "http",
+    "config"
+  ],
+  "scripts": {
+    "prepublish": "npm prune"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/aspectron/zetta-i18n/issues"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/aspectron/zetta-i18n"
+}

@@ -1,0 +1,262 @@
+<script>
+	var i18n = { }
+</script>
+
+<polymer-element name="i18n-entry" attributes="data list">
+	<template>
+
+		<style>
+			#content {
+/*				float: left;
+				clear: left;
+*/				width: 200px;
+				height: 80px;
+				border: 1px solid red;
+			}
+
+			.selected {
+				background-color: cyan;
+			}
+		</style>
+
+		<div id="content" hash="{{data.hash}}" class="{{ { selected : selected } | tokenList }}" on-click="{{select}}">
+			{{data | toJSON}}
+		</div>
+
+	</template>
+	
+	<script>
+		Polymer("i18n-entry", {
+			ready : function() {
+				this.selected = false;
+				this.super();
+			},
+
+			toJSON : function(v) {
+				return JSON.stringify(v);
+			},
+
+			select : function() {
+				var browser = document.querySelector("i18n-browser");
+				browser.select(this);
+
+				var editor = document.querySelector("i18n-editor");
+				editor.data = this.data;
+			}
+		})
+	</script>
+</polymer-element>
+
+
+<polymer-element name="i18n-browser" attributes="list">
+	<template>
+
+		<style>
+			#content {
+				overflow-y: scroll;
+				overflow-x: hidden;
+				border: 1px solid blue;
+			}
+		</style>
+
+
+		<div id="content" flex>
+			<template repeat="{{ list as entry }}">
+				<i18n-entry data="{{entry}}" list="{{list}}"></i18n-entry>
+			</template>
+		</div>
+
+	</template>
+	
+	<script>
+		Polymer("i18n-browser", {
+			ready : function() {
+				this.super();
+			},
+
+			select : function(e) {
+				var entries = this.shadowRoot.querySelectorAll("i18n-entry");
+				_.each(entries, function(entry) {
+					entry.selected = false;
+				})
+				e.selected = true;
+			}
+
+		})
+	</script>
+</polymer-element>
+
+
+<polymer-element name="i18n-editor" attributes="data">
+	<template>
+
+		<style>
+			#content {
+				border: 1px solid green;
+			}
+
+			input {
+				width: 600px;
+			}
+
+			.lang {
+				text-align: right;
+				padding: 4px;
+			}
+
+			.source {
+				padding: 8px;
+				font-size: 16px;
+			}
+
+			textarea {
+				height: 200px;
+			}
+		</style>
+
+		<div id="content">
+		{{ data | toJSON }}
+
+			<table border="1">
+				<template if="{{data}}">
+
+					<tr><td class='lang'>English (en):</td><td class='source'>{{data.locale.en}}</td></tr>
+
+					<template repeat="{{ ctl.languages as locale }}">
+						<template if="{{locale.enabled && locale.ident != 'en' }}">
+							<tr>
+								<td class='lang'>
+								{{locale.name}}({{locale.ident}}):
+								</td>
+								<td>
+									<template if="{{!data.multiline}}">
+										<input id="{{locale.ident}}" type="text" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}"/>
+									</template>
+									<template if="{{data.multiline}}">
+										<textarea id="{{locale.ident}}" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}"></textarea>
+									</template>
+								</td>
+							</tr>
+						</template>
+					</template>
+				</template>
+			</table>
+		</div>
+
+	</template>
+	<script>
+		Polymer("i18n-editor", {
+			domReady : function() {
+				var self = this;
+				i18n.rpc.on('update', function(args) {
+					if(args.hash == self.data.hash) {
+						var input = self.shadowRoot.querySelector('#'+args.locale);
+						input && (input.value = args.text);
+					}
+				})
+
+				this.ctl = document.querySelector("i18n-ctl");
+			},
+
+			dataChanged : function(v) {
+
+			},
+
+			attributeChanged : function(v) {
+				console.log(arguments);
+			},
+
+			toJSON : function(v) {
+				return JSON.stringify(v);
+			},
+
+			update : function(e, n, el) {
+				i18n.rpc.dispatch({
+					op : 'update',
+					hash : this.data.hash,
+					locale : el.id,
+					text : el.value
+				})
+				// console.log(arguments);
+			}
+		})
+	</script>
+
+</polymer-element>
+
+<polymer-element name="i18n-language-selector" attributes="locale">
+	<template>
+
+		<style>
+			#content {
+				float: left;
+				width: 60px;
+				height: 16px;
+				border: 1px solid cyan;
+				margin: 4px;
+				padding: 4px;
+				overflow: hidden;
+				text-align: center;
+			}
+
+			.enabled {
+				background-color: green;
+			}
+		</style>
+
+		<div id="content" class="{{ { enabled : locale.enabled } | tokenList }}">
+			{{locale.name}}
+		</div>
+
+	</template>
+	
+	<script>
+		Polymer("i18n-language-selector", {
+			ready : function() {
+				this.super();
+			}
+		})
+	</script>
+</polymer-element>
+
+
+
+<polymer-element name="i18n-ctl">
+	<template>
+		<style>
+		</style>
+
+		<core-ajax auto url="/i18n/get" handleAs="json" on-core-response="{{updateData}}"></core-ajax>
+		<div id="content">
+			<template repeat="{{languages as locale}}">
+				<i18n-language-selector locale="{{locale}}"></i18n-language-selector>
+			</template>
+		</div>
+
+	</template>
+	<script>
+		Polymer("i18n-ctl", {
+			ready : function() {
+				this.super();
+			},
+			updateData : function(e, ajax) {
+				this.config = ajax.response.config;
+
+				var languages = this.config.languages;
+				_.each(languages, function(lang, locale) {
+					lang.ident = locale;
+				})
+				this.languages = _.values(languages);
+
+				if(!this.browser)
+					this.browser = document.querySelector("i18n-browser");
+				
+				this.browser.list = _.values(ajax.response.entries);
+
+
+			}
+		})
+	</script>
+
+</polymer-element>
+

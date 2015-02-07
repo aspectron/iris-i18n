@@ -1,0 +1,15 @@
+* {
+	font-family: "Open Sans";
+	font-size: 12px;
+}
+
+body {
+	overflow: auto;
+}
+
+::shadow input {
+	font-family: "Open Sans";
+	font-size: 12px;
+	padding: 4px;
+};
+
