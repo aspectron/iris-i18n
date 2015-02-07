@@ -75,17 +75,13 @@ function i18n(core) {
     core.on('init::websockets', function() {
 
         core.io.of('/i18n-rpc').on('connection', function(socket) {
-            console.log("websocket "+socket.id+" connected");
-
-
+            // console.log("websocket "+socket.id+" connected");
             core.getSocketSession(socket, function(err, session) {
-
-                console.log(arguments);
-
+                // console.log(arguments);
                 self.webSocketMap[socket.id] = socket;            
                 socket.on('disconnect', function() {            
                     delete self.webSocketMap[socket.id];
-                    console.log("websocket "+socket.id+" disconnected");
+                    // console.log("websocket "+socket.id+" disconnected");
                 })
 
                 socket.on('message', function(msg, callback) {
@@ -102,33 +98,21 @@ function i18n(core) {
         }); 
     })
 
-
     self.on('update', function(args, socket) {
-
         var entry = self.entries[args.hash];
         entry.locale[args.locale] = args.text;
-
         self.storeEntries();
-
-        // reflect(args, socket);
     })
-
-
 
     self.initHttp = function(app) {
 
         app.use('/i18n', function(req, res, next) {
-            //console.log("GOT HANDLER");
-
             var auth = basicAuth(req);
-
             if(!auth || !self.config.users[auth.name] || self.config.users[auth.name].pass != auth.pass) {
-                
                 dpc(3000, function() {
                     res.writeHead(401, {
                         'WWW-Authenticate': 'Basic realm="Please login"'
                     })
-
                     return res.end();
                 })
             }
@@ -172,18 +156,12 @@ function i18n(core) {
             if(self.config.language_aliases[lang])
                 lang = self.config.language_aliases[lang];
 
-
             var l = self.config.languages[lang];
             if(!l)
                 return next();
             
-            //  if(lang == self.config.sourceLanguage)
-            //      return res.redirect()
-
             if(l && !parts.length)
                 return res.redirect('/'+lang+'/');
-
-
 
             if(l) {
                 req._i18n_locale = lang;
@@ -417,10 +395,6 @@ function i18n(core) {
             self.storeEntries();
         });
     });
-
-//    for(var i = 0; i < 20; i++) {
-//        self.translate(i.toString(),'','en');
-//    }
 }
 
 util.inherits(i18n, events.EventEmitter);
