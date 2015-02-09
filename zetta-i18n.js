@@ -177,6 +177,8 @@ function i18n(core) {
                 return self.translate(text, loc);
             };
 
+            req._T.languages = self.config.languages;
+
             next();            
         })
 
@@ -223,8 +225,9 @@ function i18n(core) {
     }
 
 
-    self.createEntry = function (text, category, file) {
+    self.createEntry = function (text, category, _file) {
         var hash = self.hash(text);
+        var file = _file.replace('\\','/');
 
         if (!self.entries[hash]) {
             var locale = { }

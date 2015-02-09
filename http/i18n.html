@@ -48,7 +48,7 @@
 </polymer-element>
 
 
-<polymer-element name="i18n-browser" attributes="list">
+<polymer-element name="i18n-browser" attributes="list" layout vertical>
 	<template>
 
 		<style>
@@ -59,13 +59,11 @@
 			}
 		</style>
 
-
-		<div id="content" flex>
+		<div id="content">
 			<template repeat="{{ list as entry }}">
 				<i18n-entry data="{{entry}}" list="{{list}}"></i18n-entry>
 			</template>
 		</div>
-
 	</template>
 	
 	<script>
@@ -112,13 +110,22 @@
 			textarea {
 				height: 200px;
 			}
+
+			#info {
+				margin-top: 24px;
+			}
+			
 		</style>
 
 		<div id="content">
 		{{ data | toJSON }}
 
-			<table border="1">
-				<template if="{{data}}">
+			<template if="{{!data}}">
+				Please select text entry.
+			</template>
+
+			<template if="{{data}}">
+				<table>
 
 					<tr><td class='lang'>English (en):</td><td class='source'>{{data.locale.en}}</td></tr>
 
@@ -139,8 +146,19 @@
 							</tr>
 						</template>
 					</template>
-				</template>
-			</table>
+				</table>
+
+				<div id="info">
+					<div>FILES:</div>
+					<div>
+						<template repeat="{{ data.files as file }}">
+							<div>
+								{{file}}
+							</div>
+						</template>
+					</div>
+				</div>
+			</template>
 		</div>
 
 	</template>
