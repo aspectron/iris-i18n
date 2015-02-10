@@ -52,7 +52,10 @@ function i18n(core) {
     events.EventEmitter.call(this);
 
     self.configFile = path.join(core.appFolder,'config/i18n.conf');
+    //self.userSettingFile = path.join(core.appFolder,'config/i18n.user.conf');
     self.entriesFile = path.join(core.appFolder,'config/i18n.data');
+
+    //self.userSettings = core.readJSON(self.userSettingFile);
     self.config = core.readJSON(self.configFile);
     self.entries = core.readJSON(self.entriesFile) || { }
     self.basicCategory = 'basic';
@@ -64,6 +67,11 @@ function i18n(core) {
     self.storeConfig = function() {
         core.writeJSON(self.configFile, self.config);
     }
+    /*
+    self.storeUserSettings = function() {
+        core.writeJSON(self.userSettingFile, self.userSettings);
+    }
+    */
 
     self.storeEntries = _.throttle(function() {
         console.log("Storing entires...")
@@ -102,7 +110,20 @@ function i18n(core) {
         var entry = self.entries[args.hash];
         entry.locale[args.locale] = args.text;
         self.storeEntries();
-    })
+    });
+
+    self.on('locale-update', function(args, socket) {
+        var l = self.config.languages[args.locale.ident];
+        if (!l)
+            return console.log('invalid local.ident', args.local.ident);
+
+        l.enabled = !!args.locale.enabled;
+        //var auth = basicAuth(req);
+        //self.userSettings[]
+        //l.editingEnabled = !!args.locale.editingEnabled;
+        self.storeConfig();
+    });
+    
 
     self.initHttp = function(app) {
 
@@ -199,7 +220,7 @@ function i18n(core) {
                 Error.prepareStackTrace =  function(error, r){
                     _.each(r, function(e){
                         var fnBody = e.getFunction().toString();
-                        if(fnBody.indexOf('_T("'+text+'")')>-1 || fnBody.indexOf("_T('"+message+"')")>-1){
+                        if(fnBody.indexOf('_T("'+text+'")')>-1 || fnBody.indexOf("_T('"+text+"')")>-1){
                             file = e.getFileName();
                         }
                         //console.log(e.getFileName() , e.getMethodName(),  e.getFunctionName() );
@@ -227,7 +248,7 @@ function i18n(core) {
 
     self.createEntry = function (text, category, _file) {
         var hash = self.hash(text);
-        var file = _file.replace('\\','/');
+        var file = _file? _file.replace('\\','/') : '';
 
         if (!self.entries[hash]) {
             var locale = { }
