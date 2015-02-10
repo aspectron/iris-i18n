@@ -229,19 +229,6 @@ function i18n(core) {
         })
 
         app.use(function(req, res, next) {
-            req._T = function (text, loc) {
-                loc = loc || req._T.locale;
-                return self.translate(text, loc);
-            };
-
-            req._T.languages = self.enabledLanguages;
-            req._T.source = self.config.sourceLanguage;
-            app.locals._T = req._T;
-
-            next();
-        })
-
-        app.use(function(req, res, next) {
             /*
             console.log(req.headers)
             if(req.session && !req.session.locale) {
@@ -283,14 +270,14 @@ function i18n(core) {
 
 
             if(l) {
-                req._T.locale = lang;
+                req._i18n_locale = lang;
                 req.url = '/'+parts.join('/') || '/';
             }
 
             next();
         })
 
-/* old
+
         app.use(function(req, res, next) {
             req._T = function (text, loc) {
                 loc = loc || req._i18n_locale;
@@ -299,10 +286,12 @@ function i18n(core) {
 
             req._T.locale = req._i18n_locale || self.config.sourceLanguage;
             req._T.languages = self.enabledLanguages;
+            req._T.source = self.config.sourceLanguage;
+            app.locals._T = req._T;
 
             next();            
         })
-*/
+
     }
 
 
