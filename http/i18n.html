@@ -2,34 +2,245 @@
 	var i18n = { }
 </script>
 
-<polymer-element name="i18n-entry" attributes="data list">
+<polymer-element name="i18n-tabs" attributes="current list">
+	<template>
+	<style>
+		* {
+			font-size: 12px;
+			cursor: default;
+		}
+
+		#container {
+			width: 100%;
+		}
+
+		#list {
+			clear:left;
+		}
+
+		.tab {
+			float:left;
+			position:relative;
+			height: 18px;
+			border-top: 1px solid #ccc;
+			border-left: 1px solid #ccc;
+			padding: 4px 6px 4px 6px;
+			background-color: white;
+			z-index: 1;
+
+			margin-left: 0px;
+			color: #ccc;
+			white-space: nowrap;
+		}
+
+		.tab:last-child {
+			border-right: 1px solid #ccc;
+		}
+		.selected, .selected:last-child {
+			color: #333;
+			height: 19px;
+			border-top: 1px solid #888;
+			border-left: 1px solid #888;
+			border-right: 1px solid #888;
+			background-color: #BEE2FA;
+			color: black;
+			z-index: 3;
+		}
+
+		#tabs{
+			position: relative;
+			overflow: hidden;
+			height: 28px;
+		}
+
+		#list {
+			overflow:hidden;
+			white-space: nowrap;
+			position:absolute;
+			top: 0px;
+			left: 0px;
+			transition:left .5s;
+		}
+
+		.tab {
+			float:none;
+			display:inline-block;
+		}
+
+		#leftArrow, #rightArrow {
+			padding: 0px 5px 6px;
+			position: absolute;
+			background-color: #F1F1F1;
+			border: 1px solid #F1F1F1;
+			z-index: 4;
+			font-weight: bold;
+			font-size: 28px;
+			color: #000;
+			line-height: 22px;
+		}
+		#leftArrow {
+			left:0;
+		}
+
+		#rightArrow {
+			right:0;
+		}
+		.hidden{
+			display: none;
+		}
+	</style>
+	<div id="container">
+		<div id="caption">
+			{{title}}
+		</div>
+		<div id="tabs">
+			<div id="list" on-transitionend="{{showHideArrow}}"><template repeat="{{list as tab}}"><div id="tab-{{tab.ident}}" ident="{{tab.ident}}" on-click={{selectTab}} class="tab {{ tab.selected ? 'selected' : ''}}">
+						{{ (tab.text||tab.ident) | toUpperCase }}
+					</div></template></div>
+			<div id="leftArrow" on-click="{{onLeftArrowClick}}"> &lsaquo; </div>
+			<div id="rightArrow" on-click="{{onRightArrowClick}}"> &rsaquo; </div>
+		</div>
+	</div>
+	</template>
+	<script>
+		Polymer('i18n-tabs', {
+			moveStep: 100,
+
+			listChanged: function(){
+				this.showHideArrow();
+				this.selectContent();
+			},
+
+			selectContent: function(){
+				var selected = _.find(this.list, function(tab) {return tab.selected});
+				selected && this.select(selected.ident);
+			},
+
+			toUpperCase : function(v) {
+				return v.toUpperCase();
+			},
+
+			showHideArrow: function() {
+				var outerBox = this.$.tabs.getBoundingClientRect();
+				var innerBox = this.$.list.getBoundingClientRect();
+				this.$.leftArrow.classList.toggle('hidden', (outerBox.left <= innerBox.left));
+				this.$.rightArrow.classList.toggle('hidden', (outerBox.right >= innerBox.right));
+
+				if (innerBox.width > outerBox.width) {
+					if (innerBox.left > outerBox.left) {
+						this.$.list.style.left = '0px';
+					}else if(innerBox.right < outerBox.right ){
+						this.move(outerBox.right - innerBox.right);
+					}
+				}
+			},
+
+			move: function(step){
+				this.$.list.style.position = 'absolute';
+				this.$.list.style.left = parseInt((this.$.list.style.left || '0px').replace('px', '')) + step + 'px';
+			},
+
+			onLeftArrowClick: function(){
+				this.move(this.moveStep)
+			},
+
+			onRightArrowClick: function() {
+				this.move(-this.moveStep)
+			},
+
+			domReady: function(){
+				this.showHideArrow();
+				this.selectContent();
+			},
+
+			getItem : function(id) {
+				return document.querySelector("::shadow #"+id);
+			},
+
+
+			selectTab : function(e,n,item) {
+				this.select(item.id.substring(4));
+			},			
+
+			select : function(id) {
+				var self = this;
+				_.each(this.list, function(tab) {
+					tab.selected = (tab.ident == id);
+					var $ = self.getItem(tab.ident);
+					if($)
+						$.style.display = (tab.selected) ? 'inherit' : 'none';
+					else
+						console.error("#"+tab.ident+" not found (tab target)")
+				})
+			}
+		});
+	</script>
+</polymer-element>
+
+
+<polymer-element name="i18n-entry" attributes="data">
 	<template>
 
 		<style>
-			#content {
-/*				float: left;
-				clear: left;
-*/				width: 200px;
-				height: 80px;
-				border: 1px solid red;
+			:host{
+				width: 200px;
+				padding: 5px 5px 0px 5px;
+				display: block;
+			}
+			#content{
+				padding: 5px;
+				border-bottom: 1px solid #ddd;
 			}
 
+			.missing{
+				background-color: rgba(255, 0, 0, 0.1);
+			}
 			.selected {
 				background-color: cyan;
 			}
+			.locale{
+				min-height: 18px;
+			}
+			.locale .mis{
+				background-color: red;
+				color: #FFF;
+				padding: 0px 2px;
+			}
 		</style>
-
-		<div id="content" hash="{{data.hash}}" class="{{ { selected : selected } | tokenList }}" on-click="{{select}}">
-			{{data | toJSON}}
+		<div id="content" hash="{{data.hash}}" class="{{ { selected : selected, missing: missing.length } | tokenList }}" on-click="{{select}}">
+			{{data.locale.en}}
+			<div class="locale">
+				<template repeat="{{ missing as l}}">
+					<span class="mis">{{l | toUpperCase()}}</span>
+				</template>
+			</div>
 		</div>
-
 	</template>
 	
 	<script>
 		Polymer("i18n-entry", {
+			dataChanged: function(){
+				var self = this, data = self.data || {};
+				//self.locs = _.keys(data.locale || []);
+				var editLanguages = document.querySelector("i18n-ctl").getLanguages(true);
+				self.missing = [];
+				_.each(editLanguages, function(l){
+					if(!data.locale[l.ident]){
+						self.missing.push(l.ident);
+					}
+				});
+			},
+
 			ready : function() {
 				this.selected = false;
 				this.super();
+			},
+			toUpperCase: function(v){
+				return (v+'').toUpperCase();
+			},
+
+			isMissing: function(ident){
+				return this.missing.indexOf(ident) > -1;
 			},
 
 			toJSON : function(v) {
@@ -55,7 +266,7 @@
 			#content {
 				overflow-y: scroll;
 				overflow-x: hidden;
-				border: 1px solid blue;
+				border: 0px solid blue;
 			}
 		</style>
 
@@ -73,13 +284,23 @@
 			},
 
 			select : function(e) {
-				var entries = this.shadowRoot.querySelectorAll("i18n-entry");
+				var entries = this.getEntries();
 				_.each(entries, function(entry) {
 					entry.selected = false;
 				})
 				e.selected = true;
-			}
+			},
 
+			getSelected: function(){
+				var entries = this.getEntries();
+				return _.find(entries, function(entry) {
+					return entry.selected;
+				});
+			},
+
+			getEntries: function(){
+				return this.shadowRoot.querySelectorAll("i18n-entry");
+			}
 		})
 	</script>
 </polymer-element>
@@ -91,6 +312,7 @@
 		<style>
 			#content {
 				border: 1px solid green;
+				border-width: 0px 1px 1px 0px;
 			}
 
 			input {
@@ -118,8 +340,6 @@
 		</style>
 
 		<div id="content">
-		{{ data | toJSON }}
-
 			<template if="{{!data}}">
 				Please select text entry.
 			</template>
@@ -130,10 +350,10 @@
 					<tr><td class='lang'>English (en):</td><td class='source'>{{data.locale.en}}</td></tr>
 
 					<template repeat="{{ ctl.languages as locale }}">
-						<template if="{{locale.enabled && locale.ident != 'en' }}">
+						<template if="{{locale.editingEnabled && locale.ident != 'en' }}">
 							<tr>
 								<td class='lang'>
-								{{locale.name}}({{locale.ident}}):
+								{{locale.name}} ({{locale.ident}}):
 								</td>
 								<td>
 									<template if="{{!data.multiline}}">
@@ -156,6 +376,10 @@
 								{{file}}
 							</div>
 						</template>
+					</div>
+					<hr />
+					<div>
+						{{ data | toJSON }}
 					</div>
 				</div>
 			</template>
@@ -196,13 +420,20 @@
 					text : el.value
 				})
 				// console.log(arguments);
+
+				var selectedEntry = document.querySelector("i18n-browser").getSelected();
+				if (selectedEntry) {
+					selectedEntry.dataChanged();
+				};
 			}
 		})
 	</script>
 
 </polymer-element>
 
-<polymer-element name="i18n-language-selector" attributes="locale">
+
+
+<polymer-element name="i18n-language-selector" attributes="locale toggle">
 	<template>
 
 		<style>
@@ -215,14 +446,16 @@
 				padding: 4px;
 				overflow: hidden;
 				text-align: center;
+				position: relative;
 			}
 
 			.enabled {
 				background-color: green;
+				color: #FFFFFF;
 			}
 		</style>
 
-		<div id="content" class="{{ { enabled : locale.enabled } | tokenList }}">
+		<div id="content" class="{{ { enabled : locale[toggle] } | tokenList }}" on-click="{{onClick}}">
 			{{locale.name}}
 		</div>
 
@@ -231,7 +464,12 @@
 	<script>
 		Polymer("i18n-language-selector", {
 			ready : function() {
-				this.super();
+				this.super()
+			},
+			onClick: function(e, a, b){
+				var self = this, locale = self.locale, toggle = self.toggle;
+				locale[toggle] = !locale[toggle];
+				self.fire('updated', locale);
 			}
 		})
 	</script>
@@ -246,32 +484,97 @@
 
 		<core-ajax auto url="/i18n/get" handleAs="json" on-core-response="{{updateData}}"></core-ajax>
 		<div id="content">
-			<template repeat="{{languages as locale}}">
-				<i18n-language-selector locale="{{locale}}"></i18n-language-selector>
-			</template>
+			<i18n-tabs> </i18n-tabs>
+			<div id="tab-content-edit">
+				<template repeat="{{languages as locale}}">
+					<i18n-language-selector locale="{{locale}}" toggle="editingEnabled" on-updated="{{onLanguageChange}}"></i18n-language-selector>
+				</template>
+			</div>
+			<div id="tab-content-site">
+				<template repeat="{{languages as locale}}">
+					<i18n-language-selector locale="{{locale}}" toggle="enabled" on-updated="{{onLanguageChange}}"></i18n-language-selector>
+				</template>
+			</div>
 		</div>
 
 	</template>
 	<script>
 		Polymer("i18n-ctl", {
 			ready : function() {
-				this.super();
+				var self = this;
+				self.super();
+				var tabs = self.shadowRoot.querySelector("i18n-tabs");
+				tabs.list = [{ident:'edit', text:'Editing languages', selected : true },{ident:'site', text:'Site languages'}];
+				tabs.getItem = function(id) {
+					return self.$['tab-content-'+id];
+				}
 			},
-			updateData : function(e, ajax) {
-				this.config = ajax.response.config;
 
-				var languages = this.config.languages;
+			onLanguageChange: function(e){
+				var locale = e.detail;
+				i18n.rpc.dispatch({
+					op : 'locale-update',
+					locale : locale
+				});
+				if (locale.editingEnabled != undefined) {
+					this.setLocale(locale);
+				}
+
+				var entries = document.querySelector("i18n-browser").getEntries();
+				_.each(entries, function(entry){
+					entry.dataChanged();
+				});
+			},
+
+			setLocale: function(locale){
+				var info = JSON.parse(localStorage['i18n'] || "{}");
+				info[locale.ident] = locale.editingEnabled;
+				localStorage['i18n'] = JSON.stringify(info);
+			},
+
+			getlocale: function(ident){
+				var info = JSON.parse(localStorage['i18n'] || "{}");
+				return info[ident];
+			},
+
+			getLanguages: function(editing, enabled){
+				return _.filter(this.languages, function(l){
+					if (editing != undefined && l.editingEnabled != editing) {
+						return false;
+					};
+					if (enabled != undefined && l.enabled != enabled) {
+						return false;
+					};
+					return true;
+				});
+			},
+
+			updateData : function(e, ajax) {
+				var self = this;
+				self.config = ajax.response.config;
+				var languages = self.config.languages;
 				_.each(languages, function(lang, locale) {
 					lang.ident = locale;
-				})
-				this.languages = _.values(languages);
+				});
 
-				if(!this.browser)
-					this.browser = document.querySelector("i18n-browser");
+				if (ajax.response.locales && ajax.response.locales != '*') {
+					var locales = ajax.response.locales.split(' ');
+					languages = _.filter(languages, function(l){
+						return (locales.indexOf(l.ident) > -1);
+					});
+				};
+
+				languages = _.filter(languages, function(l){
+					l.editingEnabled = !!self.getlocale(l.ident);
+					return (l.ident != 'en');
+				});
+
+				self.languages = _.values(languages);
+
+				if(!self.browser)
+					self.browser = document.querySelector("i18n-browser");
 				
-				this.browser.list = _.values(ajax.response.entries);
-
-
+				self.browser.list = _.values(ajax.response.entries);
 			}
 		})
 	</script>
