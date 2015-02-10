@@ -225,11 +225,25 @@
 			dataChanged: function(){
 				var self = this, data = self.data || {};
 				//self.locs = _.keys(data.locale || []);
-				var editLanguages = document.querySelector("i18n-ctl").getLanguages(true);
+				var ctl = document.querySelector("i18n-ctl");
+				var editLanguages = ctl.getLanguages(true);
 				self.missing = [];
 				_.each(editLanguages, function(l){
 					if(!data.locale[l.ident]){
 						self.missing.push(l.ident);
+					}
+				});
+
+				i18n.rpc.on('delete', function(args) {
+					if(args.hash == data.hash) {
+						self.remove();
+						var editor = document.querySelector("i18n-editor");
+						if (editor.data && data.hash == editor.data.hash) {
+							var entries = document.querySelector("i18n-browser").getEntries();
+							if (entries[0]) {
+								entries[0].select();
+							};
+						};
 					}
 				});
 			},
@@ -269,7 +283,6 @@
 			#content {
 				overflow-y: scroll;
 				overflow-x: hidden;
-				/*border: 0px solid blue;*/
 			}
 		</style>
 
@@ -415,7 +428,13 @@
 						var input = self.shadowRoot.querySelector('#'+args.locale);
 						input && (input.value = args.text);
 					}
-				})
+				});
+
+				i18n.rpc.on('delete', function(args) {
+					if(args.hash == self.data.hash) {
+						//self.data = false;
+					}
+				});
 
 				this.ctl = document.querySelector("i18n-ctl");
 			},
@@ -461,15 +480,10 @@
 
 			deleteEntry : function() {
 				if(window.confirm("Are you sure you want to delete this entry?")) {
-					console.log("TODO - DELETE ENTRY!");
-
-					// @mattoo - DELETE ENTRY AND MAKE SURE IT REFLECTS TO OTHER INSTANCES
 					i18n.rpc.dispatch({
 						op : 'delete',
-						hash : this.data.hash,
-						// locale : el.id,
-						// text : el.value
-					})
+						hash : this.data.hash
+					});
 				}
 			}
 		})
@@ -497,7 +511,6 @@
 
 			.enabled {
 				background-color: #c2ffd1;
-				/*color: #ffffff;*/
 			}
 		</style>
 
@@ -591,11 +604,7 @@
 
 			onEditingChange: function(e){
 				var locale = e.detail;
-/*				i18n.rpc.dispatch({
-					op : 'locale-update',
-					locale : locale
-				});
-*/				if (locale.editingEnabled != undefined) {
+				if (locale.editingEnabled != undefined) {
 					this.setLocale(locale);
 				}
 
