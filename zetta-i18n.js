@@ -234,6 +234,8 @@ function i18n(core) {
                 return self.translate(text, loc);
             };
 
+            app.locals._T = req._T;//Anton is is correct ?
+
             req._T.languages = self.enabledLanguages;
             next();
         })
