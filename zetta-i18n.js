@@ -74,9 +74,15 @@ function i18n(core) {
     */
 
     self.storeEntries = _.throttle(function() {
-        console.log("Storing entires...")
+        console.log("i18n - storing "+_.size(self.entries)+" entires.")
         core.writeJSON(self.entriesFile, self.entries);        
     }, 2000);
+
+
+    self.updateEnabled = function() {
+        self.enabledLanguages = _.pick(self.config.languages, function(v) { return v.enabled; })
+    }
+    self.updateEnabled();
 
 
     self.webSocketMap = { }
@@ -122,6 +128,8 @@ function i18n(core) {
         //self.userSettings[]
         //l.editingEnabled = !!args.locale.editingEnabled;
         self.storeConfig();
+
+        self.updateEnabled();
     });
     
 
@@ -180,6 +188,9 @@ function i18n(core) {
             var l = self.config.languages[lang];
             if(!l)
                 return next();
+
+            if(!l.enabled)
+                lang = self.config.sourceLanguage;
             
             if(l && !parts.length)
                 return res.redirect('/'+lang+'/');
@@ -198,7 +209,7 @@ function i18n(core) {
                 return self.translate(text, loc);
             };
 
-            req._T.languages = self.config.languages;
+            req._T.languages = self.enabledLanguages;
 
             next();            
         })
@@ -248,7 +259,7 @@ function i18n(core) {
 
     self.createEntry = function (text, category, _file) {
         var hash = self.hash(text);
-        var file = _file? _file.replace('\\','/') : '';
+        var file = _file? _file.replace(/\\/g,'/') : '';
 
         if (!self.entries[hash]) {
             var locale = { }
@@ -269,7 +280,8 @@ function i18n(core) {
                 original: self.config.sourceLanguage,
                 files: files,
                 multiline: false,
-                orphan: false
+                orphan: false,
+                ts : Date.now()
             };
 
             self.config.debug && console.log('i18n: Creating new entry:', '"'+text+'"');
@@ -413,7 +425,7 @@ function i18n(core) {
         }        
     }
 
-    scanFolders(core.appFolder, self.config.folders, [] , function (err, files) {
+    scanFolders(core.appFolder, self.config.folders.slice(), [] , function (err, files) {
         if (err) return callback(err, self.entries);
 
         digestFiles(files, function (err) {

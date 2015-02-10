@@ -29,6 +29,7 @@
 			z-index: 1;
 
 			margin-left: 0px;
+			margin-top: 2px;
 			color: #ccc;
 			white-space: nowrap;
 		}
@@ -51,6 +52,7 @@
 			position: relative;
 			overflow: hidden;
 			height: 28px;
+			margin-left: 4px;
 		}
 
 		#list {
@@ -193,18 +195,19 @@
 			}
 
 			.missing{
-				background-color: rgba(255, 0, 0, 0.1);
+				background-color: rgba(255, 0, 0, 0.05);
 			}
 			.selected {
-				background-color: cyan;
+				background-color: #bffffe;
 			}
 			.locale{
 				min-height: 18px;
 			}
 			.locale .mis{
-				background-color: red;
+				background-color: #fa2352;
 				color: #FFF;
-				padding: 0px 2px;
+				padding: 1px 2px;
+				font-size: 10px;
 			}
 		</style>
 		<div id="content" hash="{{data.hash}}" class="{{ { selected : selected, missing: missing.length } | tokenList }}" on-click="{{select}}">
@@ -266,7 +269,7 @@
 			#content {
 				overflow-y: scroll;
 				overflow-x: hidden;
-				border: 0px solid blue;
+				/*border: 0px solid blue;*/
 			}
 		</style>
 
@@ -311,7 +314,7 @@
 
 		<style>
 			#content {
-				border: 1px solid green;
+				/*border: 1px solid green;*/
 				border-width: 0px 1px 1px 0px;
 			}
 
@@ -335,6 +338,20 @@
 
 			#info {
 				margin-top: 24px;
+				margin-left: 12px;
+			}
+
+			.files {
+				margin-left: 12px;
+			}
+
+			#delete {
+				float: right;
+				background-image: url("images/delete.svg");
+				width: 24px;
+				height: 24px;
+				margin-right: 8px;
+				margin-top: 4px;
 			}
 			
 		</style>
@@ -345,6 +362,8 @@
 			</template>
 
 			<template if="{{data}}">
+				<div id="delete" on-click="{{deleteEntry}}" title="Delete Entry"></div>
+
 				<table>
 
 					<tr><td class='lang'>English (en):</td><td class='source'>{{data.locale.en}}</td></tr>
@@ -369,18 +388,19 @@
 				</table>
 
 				<div id="info">
+					<div>CREATED: {{ data.ts | toDate }}</div>
 					<div>FILES:</div>
-					<div>
+					<div class="files">
 						<template repeat="{{ data.files as file }}">
 							<div>
 								{{file}}
 							</div>
 						</template>
 					</div>
-					<hr />
+					<!-- <hr />
 					<div>
-						{{ data | toJSON }}
-					</div>
+						 {{ data | toJSON }} 
+					</div> -->
 				</div>
 			</template>
 		</div>
@@ -412,6 +432,18 @@
 				return JSON.stringify(v);
 			},
 
+			toDate : function(ts) {
+			    var a = new Date(ts);
+			    var year = a.getFullYear();
+			    var month = a.getMonth()+1; month = month < 10 ? '0' + month : month;
+			    var date = a.getDate(); date = date < 10 ? '0' + date : date;
+			    var hour = a.getHours(); hour = hour < 10 ? '0' + hour : hour;
+			    var min = a.getMinutes(); min = min < 10 ? '0' + min : min;
+			    var sec = a.getSeconds(); sec = sec < 10 ? '0' + sec : sec;
+			    var time = year + '-' + month + '-' + date + ' ' + hour + ':' + min + ':' + sec;
+			    return time;
+			},
+
 			update : function(e, n, el) {
 				i18n.rpc.dispatch({
 					op : 'update',
@@ -425,6 +457,20 @@
 				if (selectedEntry) {
 					selectedEntry.dataChanged();
 				};
+			},
+
+			deleteEntry : function() {
+				if(window.confirm("Are you sure you want to delete this entry?")) {
+					console.log("TODO - DELETE ENTRY!");
+
+					// @mattoo - DELETE ENTRY AND MAKE SURE IT REFLECTS TO OTHER INSTANCES
+					i18n.rpc.dispatch({
+						op : 'delete',
+						hash : this.data.hash,
+						// locale : el.id,
+						// text : el.value
+					})
+				}
 			}
 		})
 	</script>
@@ -439,9 +485,9 @@
 		<style>
 			#content {
 				float: left;
-				width: 60px;
+				min-width: 60px;
 				height: 16px;
-				border: 1px solid cyan;
+				border: 1px solid #ccc;
 				margin: 4px;
 				padding: 4px;
 				overflow: hidden;
@@ -450,8 +496,8 @@
 			}
 
 			.enabled {
-				background-color: green;
-				color: #FFFFFF;
+				background-color: #c2ffd1;
+				/*color: #ffffff;*/
 			}
 		</style>
 
@@ -487,12 +533,12 @@
 			<i18n-tabs> </i18n-tabs>
 			<div id="tab-content-edit">
 				<template repeat="{{languages as locale}}">
-					<i18n-language-selector locale="{{locale}}" toggle="editingEnabled" on-updated="{{onLanguageChange}}"></i18n-language-selector>
+					<i18n-language-selector locale="{{locale}}" toggle="editingEnabled" on-updated="{{onEditingChange}}"></i18n-language-selector>
 				</template>
 			</div>
 			<div id="tab-content-site">
 				<template repeat="{{languages as locale}}">
-					<i18n-language-selector locale="{{locale}}" toggle="enabled" on-updated="{{onLanguageChange}}"></i18n-language-selector>
+					<i18n-language-selector locale="{{locale}}" toggle="enabled" on-updated="{{onStateChange}}"></i18n-language-selector>
 				</template>
 			</div>
 		</div>
@@ -510,13 +556,46 @@
 				}
 			},
 
-			onLanguageChange: function(e){
+			domReady : function() {
+				var self = this;
+				i18n.rpc.on('locale-update', function(args) {
+
+					var locale = _.find(self.languages, function(v) { return v.ident == args.locale.ident; })
+					if(locale)
+						locale.enabled = args.locale.enabled;
+
+					var entries = document.querySelector("i18n-browser").getEntries();
+					_.each(entries, function(entry){
+						entry.dataChanged();
+					});
+						
+				})
+
+			},
+
+			onStateChange: function(e){
 				var locale = e.detail;
 				i18n.rpc.dispatch({
 					op : 'locale-update',
 					locale : locale
 				});
 				if (locale.editingEnabled != undefined) {
+					this.setLocale(locale);
+				}
+
+				var entries = document.querySelector("i18n-browser").getEntries();
+				_.each(entries, function(entry){
+					entry.dataChanged();
+				});
+			},
+
+			onEditingChange: function(e){
+				var locale = e.detail;
+/*				i18n.rpc.dispatch({
+					op : 'locale-update',
+					locale : locale
+				});
+*/				if (locale.editingEnabled != undefined) {
 					this.setLocale(locale);
 				}
 
