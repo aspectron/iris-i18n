@@ -299,7 +299,8 @@ function i18n(core) {
                 for (var i = 0; i < list.length; i++) {
                     if (acceptFile(scanPath, list[i], fileExtensions)) {
                         //files.push((folder.length ? folder + '/' : folder) + list[i]);
-                        files.push(path.join(scanPath,list[i]));
+                        //files.push(path.join(scanPath,list[i]));
+                        files.push(path.join(folder,list[i]));
                     }
                 }
 
