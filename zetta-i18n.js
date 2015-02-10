@@ -86,6 +86,14 @@ function i18n(core) {
 
 
     self.webSocketMap = { }
+
+    self.dispatchToAll = function(msg, exclude){
+        _.each(self.webSocketMap, function(dest, id) {
+            if(!exclude || exclude != id)
+                dest.emit('message', msg);
+        });
+    }
+
     core.on('init::websockets', function() {
 
         core.io.of('/i18n-rpc').on('connection', function(socket) {
@@ -96,15 +104,58 @@ function i18n(core) {
                 socket.on('disconnect', function() {            
                     delete self.webSocketMap[socket.id];
                     // console.log("websocket "+socket.id+" disconnected");
-                })
+                });
+
+                socket.on('rpc::request', function(msg) {
+                    try {
+                        if(!msg.req) {
+
+                            socket.emit('rpc::response', {
+                                err : { error : "Malformed request" }
+                            });
+
+                        }
+                        else {
+                            /*
+                            msg.req.user = self.userTracking[info.sid];
+                            if(!self.authenticator)
+                                msg.req.token = msg.req.user && msg.req.user.token;
+                            */
+
+                            var listeners = self.listeners(msg.req.op);
+                            if(listeners.length == 1) {
+                                listeners[0].call(socket, msg.req, function(err, resp) {
+                                    socket.emit('rpc::response', {
+                                        _resp : msg._req,
+                                        err : err,
+                                        resp : resp,
+                                    });
+                                })
+                            }
+                            else
+                            if(listeners.length)
+                            {
+                                socket.emit('rpc::response', {
+                                    _resp : msg._req,
+                                    err : { error : "Too many handlers for '"+msg.req.op+"'" }
+                                });
+                            }
+                            else
+                            {
+                                socket.emit('rpc::response', {
+                                    _resp : msg._req,
+                                    err : { error : "No such handler '"+msg.req.op+"'" }
+                                });
+                            }
+                        }
+                    }
+                    catch(ex) { console.error(ex.stack); }
+                });
 
                 socket.on('message', function(msg, callback) {
                     try {                   
                         self.emit(msg.op, msg, socket);
-                        _.each(self.webSocketMap, function(dest, id) {
-                            if(socket.id != id)
-                                dest.emit('message', msg);
-                        })
+                        self.dispatchToAll(msg, socket.id);
                     }
                     catch(ex) { console.error(ex.stack); }
                 });
@@ -118,17 +169,21 @@ function i18n(core) {
         self.storeEntries();
     });
 
+    self.on('delete', function(args) {
+        if (self.entries[args.hash]) {
+            delete self.entries[args.hash];
+            self.storeEntries();
+            self.dispatchToAll({op: 'delete', hash: args.hash});
+        }
+    });
+
     self.on('locale-update', function(args, socket) {
         var l = self.config.languages[args.locale.ident];
         if (!l)
             return console.log('invalid local.ident', args.local.ident);
 
         l.enabled = !!args.locale.enabled;
-        //var auth = basicAuth(req);
-        //self.userSettings[]
-        //l.editingEnabled = !!args.locale.editingEnabled;
         self.storeConfig();
-
         self.updateEnabled();
     });
     
@@ -173,9 +228,18 @@ function i18n(core) {
             })
         })
 
+        app.use(function(req, res, next) {
+            req._T = function (text, loc) {
+                loc = loc || req._T.locale;
+                return self.translate(text, loc);
+            };
+
+            req._T.languages = self.enabledLanguages;
+            next();
+        })
 
         app.use(function(req, res, next) {
-
+            req._T.locale = req._T.locale || self.config.sourceLanguage || 'en';
             var parts = req.url.split('/');
             parts.shift();
             var lang = parts.shift();
@@ -196,22 +260,11 @@ function i18n(core) {
                 return res.redirect('/'+lang+'/');
 
             if(l) {
-                req._i18n_locale = lang;
+                req._T.locale = lang;
                 req.url = parts.join('/') || '/';
             }
 
             next();
-        })
-
-        app.use(function(req, res, next) {
-            req._T = function (text, loc) {
-                loc = loc || req._i18n_locale;
-                return self.translate(text, loc);
-            };
-
-            req._T.languages = self.enabledLanguages;
-
-            next();            
         })
 
     }
@@ -310,7 +363,7 @@ function i18n(core) {
         function scanFolder() {
             var folder = folders.shift();
             if (folder === undefined) {
-//                console.log('Scanning:: Finished with result', result);
+                //                console.log('Scanning:: Finished with result', result);
                 return callback(null, result);
             }
             if(folderFileExtensions.length){
