@@ -80,7 +80,7 @@ function i18n(core) {
 
 
     self.updateEnabled = function() {
-        self.enabledLanguages = _.pick(self.config.languages, function(v) { return v.enabled; })
+        self.enabledLanguages = _.pick(self.config.languages, function(v, code) { return v.enabled || code == self.config.sourceLanguage; })
     }
     self.updateEnabled();
 
@@ -175,6 +175,21 @@ function i18n(core) {
 
 
         app.use(function(req, res, next) {
+            /*
+            console.log(req.headers)
+            if(req.session && !req.session.locale) {
+                var header = req.header('accept-language');
+                if(header) {
+                    var parts = header.split(';');
+                    if(parts && parts.length) {
+                        var base = parts[0].split(',')[1];
+                        if(base && self.config.languages[base]) {
+                            req.session.locale = base;
+                        }
+                    }
+                }
+            }
+            */
 
             var parts = req.url.split('/');
             parts.shift();
@@ -186,14 +201,19 @@ function i18n(core) {
                 lang = self.config.language_aliases[lang];
 
             var l = self.config.languages[lang];
-            if(!l)
+            if(!l) 
                 return next();
+
+            if(lang == self.config.sourceLanguage)
+                return res.redirect(parts.join('/') || '/');
+
 
             if(!l.enabled)
                 lang = self.config.sourceLanguage;
             
             if(l && !parts.length)
                 return res.redirect('/'+lang+'/');
+
 
             if(l) {
                 req._i18n_locale = lang;
@@ -209,7 +229,9 @@ function i18n(core) {
                 return self.translate(text, loc);
             };
 
+            req._T.locale = req._i18n_locale || self.config.sourceLanguage;
             req._T.languages = self.enabledLanguages;
+            req._T.source = self.config.sourceLanguage;
 
             next();            
         })
@@ -245,8 +267,7 @@ function i18n(core) {
                 //console.log(e)
             }
 
-            self.createEntry(text, category, file);
-            self.storeEntries();
+            self.createEntry(text, category, file) && self.storeEntries();
         }
 
         if(params) {
@@ -285,6 +306,8 @@ function i18n(core) {
             };
 
             self.config.debug && console.log('i18n: Creating new entry:', '"'+text+'"');
+
+            return true;
         } 
         else 
         {
@@ -293,8 +316,11 @@ function i18n(core) {
             file = file.replace(core.appFolder, '');
             if (file && !_.contains(entry.files, file)) {
                 entry.files.push(file);
+                return true;
             }
         }
+
+        return false;
     }
 
     // -------------
@@ -429,7 +455,7 @@ function i18n(core) {
         if (err) return callback(err, self.entries);
 
         digestFiles(files, function (err) {
-            self.storeEntries();
+            // ...
         });
     });
 }
