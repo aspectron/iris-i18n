@@ -1,7 +1,7 @@
 {
   "name": "zetta-i18n",
-  "description": "Zetta Toolkit - Site Translation",
-  "version": "0.0.4",
+  "description": "Zetta Toolkit - Site Localisation Module",
+  "version": "0.0.5",
   "author": {
     "name": "ASPECTRON Inc.",
     "email": "info@aspectron.com"
