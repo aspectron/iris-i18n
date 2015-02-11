@@ -65,6 +65,7 @@
     },
 
     "users" : {
-        "amanda" : { "locales" : "*", "pass" : "password" }
+        "amanda" : { "locales" : "*", "pass" : "sha256 hash of password in hex" },
+        "debra" : { "locales" : "fr es", "pass" : "sha256 hash of password in hex" },
     }
 }

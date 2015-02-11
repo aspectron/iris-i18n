@@ -99,6 +99,9 @@ function i18n(core) {
         core.io.of('/i18n-rpc').on('connection', function(socket) {
             // console.log("websocket "+socket.id+" connected");
             core.getSocketSession(socket, function(err, session) {
+                if(!session || !session.i18n_user)
+                    return socket.close();
+
                 // console.log(arguments);
                 self.webSocketMap[socket.id] = socket;            
                 socket.on('disconnect', function() {            
@@ -192,16 +195,15 @@ function i18n(core) {
 
         app.use('/i18n', function(req, res, next) {
             var auth = basicAuth(req);
-            if(!auth || !self.config.users[auth.name] || self.config.users[auth.name].pass != auth.pass) {
-                dpc(3000, function() {
-                    res.writeHead(401, {
-                        'WWW-Authenticate': 'Basic realm="Please login"'
-                    })
-                    return res.end();
+            var pass = crypto.createHash('sha256').update(auth.pass).digest('hex');
+            if(!auth || !self.config.users[auth.name] || self.config.users[auth.name].pass != pass) {
+                res.writeHead(401, {
+                    'WWW-Authenticate': 'Basic realm="Please login"'
                 })
+                return res.end();
             }
             else {
-                req.i18n_user = self.config.users[auth.name];
+                req.i18n_user = req.session.i18n_user = self.config.users[auth.name];
                 next();
             }
         })
