@@ -195,7 +195,7 @@ function i18n(core) {
 
         app.use('/i18n', function(req, res, next) {
             var auth = basicAuth(req);
-            var pass = crypto.createHash('sha256').update(auth.pass).digest('hex');
+            var pass = auth && crypto.createHash('sha256').update(auth.pass).digest('hex');
             if(!auth || !self.config.users[auth.name] || self.config.users[auth.name].pass != pass) {
                 res.writeHead(401, {
                     'WWW-Authenticate': 'Basic realm="Please login"'
