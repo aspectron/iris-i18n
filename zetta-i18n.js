@@ -172,6 +172,12 @@ function i18n(core) {
         self.storeEntries();
     });
 
+    self.on('update-note', function(args, socket) {
+        var entry = self.entries[args.hash];
+        entry.note = args.note;
+        self.storeEntries();
+    });
+
     self.on('delete', function(args) {
         if (self.entries[args.hash]) {
             delete self.entries[args.hash];

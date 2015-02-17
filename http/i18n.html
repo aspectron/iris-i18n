@@ -331,8 +331,11 @@
 				border-width: 0px 1px 1px 0px;
 			}
 
-			input, #note{
+			input, textarea{
 				width: 600px;
+			}
+			#note{
+				border: 0px;
 			}
 
 			.lang {
@@ -345,7 +348,7 @@
 				font-size: 16px;
 			}
 
-			textarea {
+			textarea.input {
 				height: 200px;
 			}
 
@@ -380,16 +383,14 @@
 				<table>
 
 					<tr><td class='lang'>English (en):</td><td class='source'>{{data.locale.en}}</td></tr>
-					<template if="{{note}}">
-						<tr>
-							<td class='lang'>
-								NOTE:
-							</td>
-							<td>
-								<div id="note">{{note}}</div>
-							</td>
-						</tr>
-					</template>
+					<tr>
+						<td class='lang' valign="top">
+							NOTE:
+						</td>
+						<td>
+							<textarea id="note" on-keyup="{{updateNote}}" value="{{data.note}}"></textarea>
+						</td>
+					</tr>
 					<template repeat="{{ ctl.languages as locale }}">
 						<template if="{{locale.editingEnabled && locale.ident != 'en' }}">
 							<tr>
@@ -401,7 +402,7 @@
 										<input id="{{locale.ident}}" type="text" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}"/>
 									</template>
 									<template if="{{data.multiline}}">
-										<textarea id="{{locale.ident}}" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}"></textarea>
+										<textarea class="input" id="{{locale.ident}}" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}"></textarea>
 									</template>
 								</td>
 							</tr>
@@ -472,15 +473,27 @@
 			    return time;
 			},
 
+			updateNote: function(e, n, el){
+				i18n.rpc.dispatch({
+					op : 'update-note',
+					hash : this.data.hash,
+					note : el.value
+				});
+				this.updateEntry();
+			},
+
 			update : function(e, n, el) {
 				i18n.rpc.dispatch({
 					op : 'update',
 					hash : this.data.hash,
 					locale : el.id,
 					text : el.value
-				})
-				// console.log(arguments);
+				});
 
+				this.updateEntry();
+			},
+
+			updateEntry: function(){
 				var selectedEntry = document.querySelector("i18n-browser").getSelected();
 				if (selectedEntry) {
 					selectedEntry.dataChanged();
@@ -673,8 +686,6 @@
 				if(!self.editor)
 					self.editor = document.querySelector("i18n-editor");
 
-				self.editor.note = self.config.note || '';
-				
 				self.browser.list = _.values(ajax.response.entries);
 			}
 		})
