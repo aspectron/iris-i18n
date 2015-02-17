@@ -233,6 +233,12 @@
 						self.missing.push(l.ident);
 					}
 				});
+			},
+
+			ready : function() {
+				var self = this, data = self.data || {};
+				self.selected = false;
+				self.super();
 
 				i18n.rpc.on('delete', function(args) {
 					if(args.hash == data.hash) {
@@ -246,11 +252,6 @@
 						};
 					}
 				});
-			},
-
-			ready : function() {
-				this.selected = false;
-				this.super();
 			},
 			toUpperCase: function(v){
 				return (v+'').toUpperCase();
