@@ -331,7 +331,7 @@
 				border-width: 0px 1px 1px 0px;
 			}
 
-			input {
+			input, #note{
 				width: 600px;
 			}
 
@@ -380,7 +380,16 @@
 				<table>
 
 					<tr><td class='lang'>English (en):</td><td class='source'>{{data.locale.en}}</td></tr>
-
+					<template if="{{note}}">
+						<tr>
+							<td class='lang'>
+								NOTE:
+							</td>
+							<td>
+								<div id="note">{{note}}</div>
+							</td>
+						</tr>
+					</template>
 					<template repeat="{{ ctl.languages as locale }}">
 						<template if="{{locale.editingEnabled && locale.ident != 'en' }}">
 							<tr>
@@ -661,6 +670,10 @@
 
 				if(!self.browser)
 					self.browser = document.querySelector("i18n-browser");
+				if(!self.editor)
+					self.editor = document.querySelector("i18n-editor");
+
+				self.editor.note = self.config.note || '';
 				
 				self.browser.list = _.values(ajax.response.entries);
 			}
