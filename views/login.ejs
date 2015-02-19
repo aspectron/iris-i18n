@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>i18n</title>
+	
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+	<link href='https://fonts.googleapis.com/css?family=Exo' rel='stylesheet' type='text/css'>
+
+	<script src="deps/jquery-2.0.0.js"></script>
+	<script src="deps/hmac-sha256.js"></script>
+
+	<script>
+		var salt = "<%= challenge %>";
+		$(document).ready(function() {
+			$("#login").click(function() {
+				var user = $("#user").val();
+				var pass = $("#pass").val();
+				if(!user || !pass)
+					return $("#status").html("Please supply a valid username and password");
+				var hash = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(pass)).toString();
+				var sig = CryptoJS.HmacSHA256(CryptoJS.enc.Hex.parse(hash), CryptoJS.enc.Hex.parse(salt)).toString();
+
+	            $.ajax({
+	                url: '/i18n/login',
+	                type: 'POST',
+	                dataType: "json",
+	                data: { 
+	                	user : user,
+	                	sig : sig
+	                }
+	            }).done(function (data) {
+	            	console.log("SUCCESS:",arguments);
+	            	if(data.ack == salt)
+	            		window.location.assign('/i18n');
+	            	else
+	            		$("#status").html(data.ack);
+	            }).fail(function (jqXHR) {
+	            	console.log("FAILURE:",arguments);
+	                $("#status").html(jqXHR.statusText);
+	            });
+			})
+			$("#user").keydown(function(e) {
+				if(e.which == 13)
+					$("#login").trigger('click');
+			})
+			$("#pass").keydown(function(e) {
+				if(e.which == 13)
+					$("#login").trigger('click');
+			})
+			$("#user").focus();
+		})
+	</script>
+	<style>
+	html, body, input#user, input#pass {
+		font-family: "Exo";
+		font-size: 18px;
+		padding: 4px;
+	}
+	#status {
+		margin-top: 16px;
+		text-align: center;
+		color: #900;
+	}
+	#login {
+		border: 1px solid #ccc;
+		padding: 5px 16px;
+	}
+	</style>
+	
+</head>
+<body>
+	<table>
+		<tr>
+			<td>
+				Please login:
+			</td>
+			<td>
+				<input id="user" type="text" placeholder="Username" />
+			</td>
+			<td>
+				<input id="pass" type="password" placeholder="Password" />
+			</td>
+			<td>
+				<div id="login">Login</div>				
+			</td>
+		</tr>
+		<tr>
+			<td id="status" colspan="4">
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

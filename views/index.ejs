@@ -20,8 +20,14 @@
 	<link rel="import" href="i18n.html" />
 	<link rel="import" href="i18n-rpc.html" />
 
-	<script>
-	</script>
+	<style>
+		i18n-browser {
+			width: 25vw;
+		}
+		core-splitter {
+			width: 3px;
+		}
+	</style>
 	
 </head>
 <body fullbleed layout vertical>
@@ -30,7 +36,7 @@
 	<i18n-ctl></i18n-ctl>
 	<div layout horizontal flex style="border-top: 1px solid #888;">
 		<i18n-browser></i18n-browser>
-		<!-- <core-splitter direction="left"></core-splitter>  -->
+		<core-splitter direction="left"></core-splitter>
 		<i18n-editor flex></i18n-editor>
 	</div>
 

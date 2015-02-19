@@ -111,7 +111,7 @@ function i18n(core) {
             // console.log("websocket "+socket.id+" connected");
             core.getSocketSession(socket, function(err, session) {
                 if(!session || !session.i18n_user)
-                    return socket.close();
+                    return socket.disconnect();
 
                 // console.log(arguments);
                 self.webSocketMap[socket.id] = socket;            
@@ -210,26 +210,94 @@ function i18n(core) {
 
     self.initHttp = function(app) {
 
-        app.use('/i18n', function(req, res, next) {
-            var auth = basicAuth(req);
-            var pass = auth && crypto.createHash('sha256').update(auth.pass).digest('hex');
-            if(!auth || !self.config.users[auth.name] || self.config.users[auth.name].pass != pass) {
-                res.writeHead(401, {
-                    'WWW-Authenticate': 'Basic realm="Please login"'
-                })
-                return res.end();
+        self.clientIPs = { }
+        function reapIPs() {
+            var ts = Date.now();
+            var purge = [ ]
+            _.each(self.clientIPs, function(info, ip) {
+                if(info.ts + 10 * 60 * 1000 < ts)
+                    purge.push(ip);
+            })
+            _.each(purge, function(ip) {
+                delete self.clientIPs[ip];
+            })
+
+            dpc(60 * 1000, reapIPs);
+        }
+        reapIPs();
+
+        app.use('/i18n/deps',core.express.static(path.join(__dirname, 'http/deps')));
+
+        app.post('/i18n/login', function(req, res, next) {
+
+            var ip = core.getClientIp(req);
+            var ts = Date.now();
+            var user = req.body.user;
+            var sig = req.body.sig;
+            var challenge = req.session.i18n_challenge;
+            if(!user || !sig || !user.length || !sig.length || !challenge)
+                return res.status(401).end();
+
+            var info = self.clientIPs[ip];
+            if(!info) {
+                info = self.clientIPs[ip] = {
+                    ts : ts,
+                    hits : 0
+                }
             }
             else {
-                req.i18n_user = req.session.i18n_user = self.config.users[auth.name];
-                next();
+                info.hits++;
             }
+
+            var next = info.ts + info.hits * 1000;
+            if(next > ts) {
+                return res.status(200).json({ ack : "Too Many Attempts - Please wait "+((next-ts)/1000).toFixed()+" seconds before trying again.."});
+            }
+            else {
+                info.ts = ts;
+                user  = self.config.users[user];
+                if(!user || !user.pass)
+                    return res.status(401).end();
+
+                var lsig = crypto.createHmac('sha256', new Buffer(challenge, 'hex')).update(new Buffer(user.pass, 'hex')).digest('hex');
+                if(sig != lsig)
+                    return res.status(401).end();
+
+                req.session.i18n_user = user;
+                return res.status(200).json({ ack : challenge });
+            }
+        })
+
+        app.get('/i18n/login', function(req, res, next) {
+            req.session.i18n_challenge = crypto.createHash('sha256').update(core.config.http.session.secret+Date.now()).digest('hex');
+            ejs.renderFile(path.join(__dirname,'views/login.ejs'), { challenge : req.session.i18n_challenge }, function(err, html) {
+                if(err) {
+                    console.log(err.toString());
+                    res.status(500).end(err.toString());
+                }
+                else {
+                    res.end(html)
+                }
+            })
+        })
+
+        app.get('/i18n/logout', function(req, res, next) {
+            req.session.i18n_user = null;
+            res.redirect("/i18n/login");
+        })
+
+
+        app.use('/i18n', function(req, res, next) {
+            if(!req.session.i18n_user)
+                return res.redirect("/i18n/login");
+            next();
         })
 
         app.get('/i18n/get', function(req, res) {
             res.json({
                 config : self.config,
                 entries : self.entries,
-                locales : req.i18n_user.locales
+                locales : req.session.i18n_user.locales
             });
         })
 

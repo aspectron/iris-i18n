@@ -185,7 +185,8 @@
 
 		<style>
 			:host{
-				width: 200px;
+				/*width: 30%;*/
+				min-width: 200px;
 				padding: 5px 5px 0px 5px;
 				display: block;
 			}
@@ -330,10 +331,11 @@
 			#content {
 				/*border: 1px solid green;*/
 				border-width: 0px 1px 1px 0px;
+				width: 100%;
 			}
 
-			input, textarea{
-				width: 600px;
+			input, textarea, table {
+				width: 95%;
 			}
 			#note{
 				border: 0px;
@@ -342,11 +344,13 @@
 			.lang {
 				text-align: right;
 				padding: 4px;
+				white-space: nowrap;
 			}
 
 			.source {
 				padding: 8px;
 				font-size: 16px;
+				width: 95%;
 			}
 
 			textarea.input {
@@ -362,13 +366,26 @@
 				margin-left: 12px;
 			}
 
-			#delete {
+			#toolbar {
 				float: right;
-				background-image: url("images/delete.svg");
+			}
+
+			#delete {
+				background: url("images/delete.svg") no-repeat top left scroll;
 				width: 24px;
-				height: 24px;
+				height: 26px;
 				margin-right: 8px;
 				margin-top: 4px;
+				cursor: pointer;
+			}
+
+			#logout {
+				background: url("images/logout.svg") no-repeat top left scroll;
+				width: 24px;
+				height: 26px;
+				margin-right: 8px;
+				margin-top: 4px;
+				cursor: pointer;
 			}
 			
 		</style>
@@ -378,8 +395,12 @@
 				Please select text entry.
 			</template>
 
-			<template if="{{data}}">
+			<div id="toolbar">
 				<div id="delete" on-click="{{deleteEntry}}" title="Delete Entry"></div>
+				<div id="logout" on-click="{{logout}}" title="Logout"></div>
+			</div>
+
+			<template if="{{data}}">
 
 				<table>
 
@@ -507,6 +528,12 @@
 						op : 'delete',
 						hash : this.data.hash
 					});
+				}
+			},
+
+			logout : function() {
+				if(confirm("Are you sure you want to logout?")) {
+					window.location.assign('/i18n/logout');
 				}
 			}
 		})
