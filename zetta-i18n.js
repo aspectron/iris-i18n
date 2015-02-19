@@ -47,6 +47,17 @@ String.prototype.strtr = function (replacePairs) {
     return str;
 };
 
+String.prototype.$ = function (replacePairs) {
+    var str = this.toString(), key, re;
+
+    for (key in replacePairs) {
+        if (replacePairs.hasOwnProperty(key)) {
+            str = str.replace(key, replacePairs[key]);
+        }
+    }
+    return str;
+};
+
 function i18n(core) {
     var self = this;
     events.EventEmitter.call(this);
