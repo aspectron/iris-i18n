@@ -324,18 +324,25 @@
 </polymer-element>
 
 
-<polymer-element name="i18n-editor" attributes="data">
+<polymer-element name="i18n-editor" attributes="data" layout vertical>
 	<template>
 
 		<style>
+			:host{
+				position: relative;
+			}
 			#content {
-				/*border: 1px solid green;*/
 				border-width: 0px 1px 1px 0px;
 				width: 100%;
+				overflow-y: auto;
+				overflow-x: hidden;
 			}
 
-			input, textarea, table {
+			input, textarea {
 				width: 95%;
+			}
+			table{
+				width: 100%;
 			}
 			#note{
 				border: 0px;
@@ -367,43 +374,40 @@
 			}
 
 			#toolbar {
-				float: right;
+				position: absolute;
+				right: 20px;
+				top: 10px
+			}
+			.icon{
+				width: 24px;
+				height: 26px;
+				margin-top: 4px;
+				cursor: pointer;
+				background: no-repeat top left scroll;
 			}
 
 			#delete {
-				background: url("images/delete.svg") no-repeat top left scroll;
-				width: 24px;
-				height: 26px;
-				margin-right: 8px;
-				margin-top: 4px;
-				cursor: pointer;
+				background-image: url("images/delete.svg");
 			}
-
 			#logout {
-				background: url("images/logout.svg") no-repeat top left scroll;
-				width: 24px;
-				height: 26px;
-				margin-right: 8px;
-				margin-top: 4px;
-				cursor: pointer;
+				background-image: url("images/logout.svg");
 			}
-			
+			#toggleInput {
+				background-image: url("images/input.svg");
+			}
 		</style>
 
-		<div id="content">
+		<div id="content" flex>
 			<template if="{{!data}}">
-				Please select text entry.
+				<div>Please select text entry.</div>
 			</template>
-
 			<div id="toolbar">
-				<div id="delete" on-click="{{deleteEntry}}" title="Delete Entry"></div>
-				<div id="logout" on-click="{{logout}}" title="Logout"></div>
+				<div id="delete" class="icon" on-click="{{deleteEntry}}" title="Delete Entry"></div>
+				<div id="logout" class="icon" on-click="{{logout}}" title="Logout"></div>
+				<div id="toggleInput" disabled?="{{!data}}" class="icon" on-click="{{toggleInput}}" title="Toggle Input"></div>
 			</div>
-
 			<template if="{{data}}">
-
 				<table>
-
 					<tr><td class='lang'>English (en):</td><td class='source'>{{data.locale.en}}</td></tr>
 					<tr>
 						<td class='lang' valign="top">
@@ -431,7 +435,6 @@
 						</template>
 					</template>
 				</table>
-
 				<div id="info">
 					<div>CREATED: {{ data.ts | toDate }}</div>
 					<div>FILES:</div>
@@ -442,14 +445,9 @@
 							</div>
 						</template>
 					</div>
-					<!-- <hr />
-					<div>
-						 {{ data | toJSON }} 
-					</div> -->
 				</div>
 			</template>
 		</div>
-
 	</template>
 	<script>
 		Polymer("i18n-editor", {
@@ -509,7 +507,8 @@
 					op : 'update',
 					hash : this.data.hash,
 					locale : el.id,
-					text : el.value
+					text : el.value,
+					multiline: !!this.data.multiline
 				});
 
 				this.updateEntry();
@@ -535,6 +534,12 @@
 				if(confirm("Are you sure you want to logout?")) {
 					window.location.assign('/i18n/logout');
 				}
+			},
+
+			toggleInput: function(){
+				if (!this.data)
+					return
+				this.data.multiline = !this.data.multiline;
 			}
 		})
 	</script>

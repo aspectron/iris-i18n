@@ -180,6 +180,7 @@ function i18n(core) {
     self.on('update', function(args, socket) {
         var entry = self.entries[args.hash];
         entry.locale[args.locale] = args.text;
+        entry.multiline = args.multiline;
         self.storeEntries();
     });
 
