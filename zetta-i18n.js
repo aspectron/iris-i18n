@@ -70,6 +70,7 @@ function i18n(core) {
     self.config = core.readJSON(self.configFile);
     self.entries = core.readJSON(self.entriesFile) || { }
     self.basicCategory = 'basic';
+    self.flush = false;
 
     _.each(self.entries, function(entry) {
         entry.orphan = true;
@@ -422,6 +423,7 @@ function i18n(core) {
 
 
     self.createEntry = function (text, category, _file) {
+console.log(arguments);        
         var hash = self.hash(text);
         var file = _file? _file.replace(/\\/g,'/') : '';
 
@@ -449,7 +451,7 @@ function i18n(core) {
             };
 
             self.config.debug && console.log('i18n: Creating new entry:', '"'+text+'"');
-
+            self.flush = true;
             return true;
         } 
         else 
@@ -459,6 +461,7 @@ function i18n(core) {
             file = file.replace(core.appFolder, '');
             if (file && !_.contains(entry.files, file)) {
                 entry.files.push(file);
+                self.flush = true;
                 return true;
             }
         }
@@ -529,7 +532,7 @@ function i18n(core) {
         function digest() {
             var file = files.shift();
             if (!file) return callback();
-            digestFile(file, function (err) {
+            digestFile(file.replace('\\','/'), function (err) {
                 if (err) return callback(err);
                 digest();
             });
@@ -538,6 +541,7 @@ function i18n(core) {
 
     function digestFile(file, callback) {
         fs.readFile(file, {encoding: 'utf8'}, function (err, data) {
+//            console.log(arguments);
             if (err) {
                 console.log(err, file);
                 return callback(null);
@@ -595,10 +599,14 @@ function i18n(core) {
     }
 
     scanFolders(core.appFolder, self.config.folders.slice(), [] , function (err, files) {
+        console.log(arguments);
         if (err) return callback(err, self.entries);
 
         digestFiles(files, function (err) {
-            // ...
+            if(self.flush) {
+                self.flush = false;
+                self.storeEntries();
+            }
         });
     });
 }
