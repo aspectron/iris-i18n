@@ -287,7 +287,7 @@ function i18n(core) {
         })
 
 
-        app.use('/i18n', function(req, res, next) {
+        app.use('/i18n*', function(req, res, next) {
             if(!req.session.i18n_user)
                 return res.redirect("/i18n/login");
             next();
@@ -374,7 +374,7 @@ function i18n(core) {
             req._T.locale = req._i18n_locale || self.config.sourceLanguage;
             req._T.languages = self.enabledLanguages;
             req._T.source = self.config.sourceLanguage;
-            app.locals._T = req._T;
+            req.locals._T = req._T;
 
             next();            
         })
