@@ -87,7 +87,17 @@ function i18n(core) {
 
     self.storeEntries = _.throttle(function() {
         console.log("i18n - storing "+_.size(self.entries)+" entires.")
-        core.writeJSON(self.entriesFile, self.entries);        
+        var list = []
+        _.each(self.entries, function(v,n) {
+            list.push('"'+n+'":'+JSON.stringify(v));
+        })
+        var text = '{\n'+list.join(',\n')+'\n}';
+        fs.writeFileSync(self.entriesFile, text);
+        // core.writeJSON(self.entriesFile, self.entries);
+
+        //var jsonxml = require('jsontoxml');
+        //var xml = jsonxml(self.entries, { prettyPrint : true });
+        //fs.writeFileSync(self.entriesFile.replace('.data','.xml'), xml);
     }, 2000);
 
 
@@ -423,7 +433,6 @@ function i18n(core) {
 
 
     self.createEntry = function (text, category, _file) {
-console.log(arguments);        
         var hash = self.hash(text);
         var file = _file? _file.replace(/\\/g,'/') : '';
 
@@ -541,7 +550,6 @@ console.log(arguments);
 
     function digestFile(file, callback) {
         fs.readFile(file, {encoding: 'utf8'}, function (err, data) {
-//            console.log(arguments);
             if (err) {
                 console.log(err, file);
                 return callback(null);
@@ -599,7 +607,6 @@ console.log(arguments);
     }
 
     scanFolders(core.appFolder, self.config.folders.slice(), [] , function (err, files) {
-        console.log(arguments);
         if (err) return callback(err, self.entries);
 
         digestFiles(files, function (err) {
