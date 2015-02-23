@@ -1,7 +1,6 @@
 <script>
 	var i18n = { }
 </script>
-
 <polymer-element name="i18n-tabs" attributes="current list">
 	<template>
 	<style>
@@ -178,8 +177,6 @@
 		});
 	</script>
 </polymer-element>
-
-
 <polymer-element name="i18n-entry" attributes="data">
 	<template>
 
@@ -276,11 +273,8 @@
 		})
 	</script>
 </polymer-element>
-
-
 <polymer-element name="i18n-browser" attributes="list" layout vertical>
 	<template>
-
 		<style>
 			#content {
 				overflow-y: scroll;
@@ -319,13 +313,11 @@
 			.stats {
 				padding: 4px;
 			}
-
-
 		</style>
-
 		<div layout vertical flex>
 			<div class='stats'>
 				{{list.length}} Entries ({{filtered.length}} Showing)
+				<div>Words: Total {{totalWords}}, Unique {{uniqueWords}}</div>
 			</div>
 			<div class="search">
 				<input id="search" type="text" value="{{search}}" placeholder="Search..."/>
@@ -349,8 +341,26 @@
 				this.filter();
 			},
 
+			cleanText: function(text){
+				return text.replace(/<[^>]*>/g, ' ');
+			},
+
+			getWords: function(text){
+				var self = this, text = self.cleanText(text);
+				return _.filter(text.split(' '), function(v){ return !!v;});
+			},
+
 			listChanged : function() {
-				this.filter();
+				var self = this;
+				self.filter();
+				var list = self.list;
+				var words = [];
+				_.each(list, function(item){
+					words = words.concat(self.getWords(item.locale.en));
+				});
+
+				self.totalWords = words.length;
+				self.uniqueWords = _.unique(words).length;
 			},
 
 			searchChanged : function() {
@@ -395,8 +405,6 @@
 		})
 	</script>
 </polymer-element>
-
-
 <polymer-element name="i18n-editor" attributes="data" layout vertical>
 	<template>
 
@@ -627,11 +635,7 @@
 			}
 		})
 	</script>
-
 </polymer-element>
-
-
-
 <polymer-element name="i18n-language-selector" attributes="locale toggle">
 	<template>
 
@@ -682,9 +686,6 @@
 		})
 	</script>
 </polymer-element>
-
-
-
 <polymer-element name="i18n-ctl">
 	<template>
 		<style>
@@ -817,6 +818,4 @@
 			}
 		})
 	</script>
-
 </polymer-element>
-
