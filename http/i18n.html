@@ -387,11 +387,14 @@
 				height: 26px;
 				cursor: pointer;
 				background: no-repeat top left scroll;
+				background-size: 24px 24px;
 			}
 
 			.hide-translated {
-				background-image: url("images/delete.svg");
-				background-size: 24px 24px;
+				background-image: url("images/unchecked-checkbox.svg");
+			}
+			.show-translated {
+				background-image: url("images/checked-checkbox.svg");
 			}
 		</style>
 		<div layout vertical flex>
@@ -400,7 +403,7 @@
 					<div>{{list.length}} Entries ({{filtered.length}} Showing)</div>
 					<div>{{totalWords}} Words ({{uniqueWords}} Unique)</div>
 				</div>
-				<div class="icon hide-translated" title="{{hideTranslated? 'Show all': 'Hide Translated'}}" on-click="{{toggleTranslated}}"></div>
+				<div class="icon {{hideTranslated?'hide':'show'}}-translated" title="{{hideTranslated? 'Show Translated': 'Hide Translated'}}" on-click="{{toggleTranslated}}"></div>
 			</div>
 			<div class="search">
 				<input id="search" type="text" value="{{search}}" placeholder="Search..."/>
