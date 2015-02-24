@@ -142,6 +142,11 @@ function i18n(core) {
 
 
     function restoreEntries(file) {
+        if(!fs.existsSync(file)) {
+            console.log("i18n.data not found, creating...".magenta.bold);
+            return;
+        }
+
         var data = fs.readFileSync(file, { encoding : 'utf8'});
         //self.entries = JSON.parse(data.replace(/^.*:\s?/gm,''));
         var lines = data.split('\n');
