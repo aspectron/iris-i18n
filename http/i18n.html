@@ -317,7 +317,7 @@
 		<div layout vertical flex>
 			<div class='stats'>
 				{{list.length}} Entries ({{filtered.length}} Showing)
-				<div>Words: Total {{totalWords}}, Unique {{uniqueWords}}</div>
+				<div>{{totalWords}} Words ({{uniqueWords}} Unique)</div>
 			</div>
 			<div class="search">
 				<input id="search" type="text" value="{{search}}" placeholder="Search..."/>
@@ -346,7 +346,13 @@
 			},
 
 			getWords: function(text){
-				var self = this, text = self.cleanText(text);
+				var self = this;
+				var text = self.cleanText(text)
+					.replace(/&amp;/g,'')
+					.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,'')
+					.replace(/\s{2,}/g,' ')
+					;
+				// console.log(text);
 				return _.filter(text.split(' '), function(v){ return !!v;});
 			},
 
