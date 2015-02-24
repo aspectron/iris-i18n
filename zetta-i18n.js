@@ -63,11 +63,13 @@ function i18n(core) {
     events.EventEmitter.call(this);
 
     self.configFile = path.join(core.appFolder,'config/i18n.conf');
+    self.sitemapFile = path.join(core.appFolder,'config/sitemap.conf');
     //self.userSettingFile = path.join(core.appFolder,'config/i18n.user.conf');
     self.entriesFile = path.join(core.appFolder,'config/i18n.data');
 
     //self.userSettings = core.readJSON(self.userSettingFile);
     self.config = core.readJSON(self.configFile);
+    self.sitemapConfig = core.readJSON(self.sitemapFile);
     //self.entries = core.readJSON(self.entriesFile) || { }
     self.basicCategory = 'basic';
     self.flush = false;
@@ -145,7 +147,6 @@ function i18n(core) {
         var lines = data.split('\n');
         _.each(lines, function(l) {
 
-            
             var ident = l.match(/^\S{2,}/).shift();
             if(!ident)
                 return;
@@ -383,7 +384,17 @@ function i18n(core) {
         app.get('/i18n/logout', function(req, res, next) {
             req.session.i18n_user = null;
             res.redirect("/i18n/login");
-        })
+        });
+
+        app.get('/sitemap', function (req, res, next) {
+            var options = self.sitemapConfig;
+            if (!options.baseUrl) {
+                options.baseUrl = req.protocol + '://' + req.headers.host;
+            }
+            var xml = self.buildSitemap(options);
+            res.contentType('text/xml');
+            res.end(xml.join('\n'));
+        });
 
 
         app.use('/i18n*', function(req, res, next) {
@@ -412,7 +423,7 @@ function i18n(core) {
                     res.end(html)
                 }
             })
-        })
+        });
 
         app.use(function(req, res, next) {
             /*
@@ -462,7 +473,6 @@ function i18n(core) {
             next();
         })
 
-
         app.use(function(req, res, next) {
             req._T = function (text, loc) {
                 loc = loc || req._i18n_locale;
@@ -476,9 +486,7 @@ function i18n(core) {
 
             next();            
         })
-
     }
-
 
     self.translate = function(text, locale, params, category) {
 
@@ -517,7 +525,6 @@ function i18n(core) {
 
         return text;
     }
-
 
     self.createEntry = function (text, category, _file) {
         var hash = self.hash(text);
@@ -703,6 +710,59 @@ function i18n(core) {
             }
         });
     });
+
+
+     /**
+     *
+     * Options:
+     *  {
+     *    baseUrl: 'example.com',
+     *    displayDefaultLocale: true,
+     *    data: [
+     *        {
+     *            url: '',
+     *            changefreq: 'monthly',
+     *            priority: 1
+     *        },
+     *        {url: 'user'},
+     *        {url: 'profile'}
+     *    ]
+     *  }
+     *
+     * @param options
+     * @returns {Function}
+     */
+    self.buildSitemap = function(options){
+        var data                    = options.data || {};
+        var baseUrl                 = options.baseUrl;
+        var displayDefaultLocale    = options.displayDefaultLocale;
+        var xml = ['<?xml version="1.0" encoding="UTF-8"?>','<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'];
+
+        _.each(data, function (row) {
+            _.each(self.enabledLanguages, function (language, code) {
+                var url = row.url ? '/' + row.url : '';
+
+                xml.push('<url>');
+                xml.push('<loc>' + baseUrl + (!displayDefaultLocale && code == core.defaultLanguage ? url : '/' + code + url) + '</loc>');
+
+                if (row.lastmod) {
+                    xml.push('<lastmod>' + row.lastmod + '</lastmod>');
+                }
+                if (row.changefreq) {
+                    xml.push('<changefreq>' + row.changefreq + '</changefreq>');
+                }
+                if (row.priority) {
+                    xml.push('<priority>' + row.priority + '</priority>');
+                }
+
+                xml.push('</url>');
+            });
+        });
+
+        xml.push('</urlset>');
+
+        return xml;
+    }
 }
 
 util.inherits(i18n, events.EventEmitter);
