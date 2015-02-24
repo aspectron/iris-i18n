@@ -386,6 +386,10 @@ function i18n(core) {
             res.redirect("/i18n/login");
         });
 
+        app.get('/robots.txt', function(req, res) {
+            res.end("Sitemap: "+req.protocol + '://' + req.headers.host+"/sitemap.xml");
+        });
+
         app.get('/sitemap.xml', function (req, res, next) {
             var options = self.sitemapConfig;
             if (!options.baseUrl) {
