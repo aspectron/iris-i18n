@@ -68,9 +68,12 @@ function i18n(core) {
 
     //self.userSettings = core.readJSON(self.userSettingFile);
     self.config = core.readJSON(self.configFile);
-    self.entries = core.readJSON(self.entriesFile) || { }
+    //self.entries = core.readJSON(self.entriesFile) || { }
     self.basicCategory = 'basic';
     self.flush = false;
+
+    self.entries = { }
+    restoreEntries(self.entriesFile);
 
     _.each(self.entries, function(entry) {
         entry.orphan = true;
@@ -85,21 +88,105 @@ function i18n(core) {
     }
     */
 
+    function PAD(t) {
+        while(t.length < 12)
+            t += ' ';
+        return t;
+    }
+
     self.storeEntries = _.throttle(function() {
         console.log("i18n - storing "+_.size(self.entries)+" entires.")
-        var list = []
-        _.each(self.entries, function(v,n) {
-            list.push('"'+n+'":'+JSON.stringify(v));
-        })
-        var text = '{\n'+list.join(',\n')+'\n}';
+        var lines = []
+
+        var list = _.values(self.entries);
+        for(var i = 0; i < list.length; i++) {
+            var e = list[i];
+            var n = e.hash;
+
+            lines.push(n+'.');
+
+            _.each(e, function(l, ident) {
+                if(ident == 'locale' || ident == 'files')
+                    return;
+                lines.push(n+PAD('.'+ident)+JSON.stringify(l));
+            })
+
+            // lines.push(n+'.files')
+            _.each(e.files, function(l, ident) {
+                lines.push(n+PAD('.file')+JSON.stringify(l));
+            })
+
+            //lines.push(n+':\t"locale": {')
+            //var locale = [ ]
+            _.each(e.locale, function(l, ident) {
+                lines.push(n+PAD('.locale.'+ident)+JSON.stringify(l));
+            })
+            //lines.push(locale.join(',\n'));
+            //lines.push(n+':\t}'+( i == list.length-1 ? '' : ',' ))
+
+            lines.push(n+'.');
+        }
+
+        var text = lines.join('\n');
+//        var text = '{\n'+lines.join('\n')+'\n}';
+
         fs.writeFileSync(self.entriesFile, text);
         // core.writeJSON(self.entriesFile, self.entries);
 
         //var jsonxml = require('jsontoxml');
         //var xml = jsonxml(self.entries, { prettyPrint : true });
         //fs.writeFileSync(self.entriesFile.replace('.data','.xml'), xml);
-    }, 2000);
+    }, 3000);
 
+
+    function restoreEntries(file) {
+        var data = fs.readFileSync(file, { encoding : 'utf8'});
+        //self.entries = JSON.parse(data.replace(/^.*:\s?/gm,''));
+        var lines = data.split('\n');
+        _.each(lines, function(l) {
+
+            
+            var ident = l.match(/^\S{2,}/).shift();
+            if(!ident)
+                return;
+
+            // console.log('ident:',ident);
+            // console.log('arg:',l.substr(ident.length));
+            var arg = l.substr(ident.length);
+            if(!arg || !arg.length)
+                return;
+
+            var v = JSON.parse(l.substr(ident.length));
+            ident = ident.split('.');
+            var hash = ident.shift();
+            // console.log("hash:",hash)
+            var e = self.entries[hash];
+            if(!e) {
+                e = self.entries[hash] = { files : [ ], locale : { } }
+            }
+
+            var prop = ident.shift();
+            if(!prop || !prop.length)
+                return;
+
+            if(prop == 'file') {
+                e.files.push(v);
+            }
+            else
+            if(prop == 'locale') {
+                var locale = ident.shift();
+                e.locale[locale] = v;
+            }
+            else
+                e[prop] = v;
+
+            if(!e.hash)
+                return;
+
+            self.entries[e.hash] = e;
+        })
+
+    }
 
     self.updateEnabled = function() {
         self.enabledLanguages = _.pick(self.config.languages, function(v, code) { return v.enabled || code == self.config.sourceLanguage; })
