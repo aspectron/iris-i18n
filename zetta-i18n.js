@@ -386,7 +386,7 @@ function i18n(core) {
             res.redirect("/i18n/login");
         });
 
-        app.get('/sitemap', function (req, res, next) {
+        app.get('/sitemap.xml', function (req, res, next) {
             var options = self.sitemapConfig;
             if (!options.baseUrl) {
                 options.baseUrl = req.protocol + '://' + req.headers.host;
@@ -735,28 +735,31 @@ function i18n(core) {
     self.buildSitemap = function(options){
         var data                    = options.data || {};
         var baseUrl                 = options.baseUrl;
-        var displayDefaultLocale    = options.displayDefaultLocale;
-        var xml = ['<?xml version="1.0" encoding="UTF-8"?>','<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'];
+        var defaultLanguage         = options.defaultLanguage || core.defaultLanguage || 'en';
+        var xml = ['<?xml version="1.0" encoding="UTF-8"?>',
+                    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'];
 
         _.each(data, function (row) {
-            _.each(self.enabledLanguages, function (language, code) {
-                var url = row.url ? '/' + row.url : '';
+            xml.push('<url>');
+            var url = row.url ? '/' + row.url : '';
+            xml.push('<loc>' + baseUrl + url  + '</loc>');
 
-                xml.push('<url>');
-                xml.push('<loc>' + baseUrl + (!displayDefaultLocale && code == core.defaultLanguage ? url : '/' + code + url) + '</loc>');
-
-                if (row.lastmod) {
-                    xml.push('<lastmod>' + row.lastmod + '</lastmod>');
-                }
-                if (row.changefreq) {
-                    xml.push('<changefreq>' + row.changefreq + '</changefreq>');
-                }
-                if (row.priority) {
-                    xml.push('<priority>' + row.priority + '</priority>');
-                }
-
-                xml.push('</url>');
+            _.each(self.enabledLanguages, function(l2, target) {
+                if(target != defaultLanguage)
+                    xml.push('<xhtml:link rel="alternate" hreflang="'+ target +'" href="'+baseUrl + '/' + target + url +'" />');
             });
+
+            if (row.lastmod) {
+                xml.push('<lastmod>' + row.lastmod + '</lastmod>');
+            }
+            if (row.changefreq) {
+                xml.push('<changefreq>' + row.changefreq + '</changefreq>');
+            }
+            if (row.priority) {
+                xml.push('<priority>' + row.priority + '</priority>');
+            }
+
+            xml.push('</url>');
         });
 
         xml.push('</urlset>');
