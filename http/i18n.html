@@ -1,6 +1,74 @@
 <script>
 	var i18n = { }
 </script>
+<polymer-element name="i18n-select" attributes="current list">
+	<template>
+		<style>
+			#content{
+				position: relative;
+				width: 200px;
+			}
+			#input{
+				position: absolute;
+				top:0px;
+				left: 0px;
+				height: 20px;
+				right: 0px;
+				background-color: rgba(255, 0,0, 0.5)
+			}
+			select1 { -webkit-appearance: menulist; box-sizing: border-box; -webkit-box-align: center; border: 1px solid; white-space: pre; -webkit-rtl-ordering: logical; color: black; background-color: white; cursor: default; }
+			select{
+				padding: 5px;
+			}
+			select option1 { -webkit-appearance: menulist;}
+			select *{
+				padding-bottom: 5px;
+				padding-left: 5px;
+				padding-right: 5px;
+				padding-top: 5px;
+				color: red;
+				-webkit-appearance: menulist-button;
+				display: block;
+			}
+			optiongroup{
+				padding: 5px;
+			}
+		</style>
+		<div id="content">
+			<div id="input" on-click="{{onInputClick}}"></div>
+			<select id="select">
+				<option>sdsdsd</option>
+				<optiongroup>
+					<option class="s"><b class="s">wwwwwwwwww</b></option>
+				</optiongroup>
+				<option>eeeeeeeeeee</option>
+			</select>
+		</div>
+	</template>
+	<script type="text/javascript">
+		Polymer('i18n-select', {
+			onInputClick: function(e){
+				var self =  this;
+				self.tryToOpenDropdown();
+			},
+			tryToOpenDropdown : function () {
+				var self = this;
+				try {
+					self.showDropdown(self.$.select);
+				} catch(e) {
+					alert('Sorry incompatible browser.');
+				}
+				return false;
+			},
+			showDropdown: function (element) {
+				var event;
+				event = document.createEvent('MouseEvents');
+				event.initMouseEvent('mousedown', true, true, window);
+				element.dispatchEvent(event);
+			}
+		});
+	</script>
+</polymer-element>
 <polymer-element name="i18n-tabs" attributes="current list">
 	<template>
 	<style>
