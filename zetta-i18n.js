@@ -303,13 +303,20 @@ function i18n(core) {
     });
 
     self.on('locale-update', function(args, socket) {
-        var l = self.config.languages[args.locale.ident];
-        if (!l)
-            return console.log('invalid local.ident', args.local.ident);
+        core.getSocketSession(socket, function(err, session) {
+            if(!session || !session.i18n_user)
+                return console.log('locale-update: request without session.');
+            if (session.i18n_user.locales!='*')
+                return console.log('locale-update: dont have permissions');
 
-        l.enabled = !!args.locale.enabled;
-        self.storeConfig();
-        self.updateEnabled();
+            var l = self.config.languages[args.locale.ident];
+            if (!l)
+                return console.log('invalid local.ident', args.local.ident);
+
+            l.enabled = !!args.locale.enabled;
+            self.storeConfig();
+            self.updateEnabled();
+        });
     });
     
 
