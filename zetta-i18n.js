@@ -435,21 +435,8 @@ function i18n(core) {
         });
 
         app.use(function(req, res, next) {
-            /*
-            console.log(req.headers)
-            if(req.session && !req.session.locale) {
-                var header = req.header('accept-language');
-                if(header) {
-                    var parts = header.split(';');
-                    if(parts && parts.length) {
-                        var base = parts[0].split(',')[1];
-                        if(base && self.config.languages[base]) {
-                            req.session.locale = base;
-                        }
-                    }
-                }
-            }
-            */
+
+            req.i18n_url = req.url;
 
             var parts = req.url.split('/');
             parts.shift();
@@ -492,6 +479,8 @@ function i18n(core) {
             req._T.languages = self.enabledLanguages;
             req._T.source = self.config.sourceLanguage;
             res.locals._T = req._T;
+
+            res.setHeader("Content-Language", req._T.locale);
 
             next();            
         })
