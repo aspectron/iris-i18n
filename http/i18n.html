@@ -163,7 +163,7 @@
 			{{title}}
 		</div>
 		<div id="tabs">
-			<div id="list" on-transitionend="{{showHideArrow}}"><template repeat="{{list as tab}}"><div id="tab-{{tab.ident}}" ident="{{tab.ident}}" on-click={{selectTab}} class="tab {{ tab.selected ? 'selected' : ''}}">
+			<div id="list" on-transitionend="{{showHideArrow}}"><template repeat="{{list as tab}}"><div id="tab-{{tab.ident}}" ident="{{tab.ident}}" on-click={{selectTab}} class="tab {{ tab.selected ? 'selected' : ''}}" hidden?="{{tab.hidden}}">
 						{{ (tab.text||tab.ident) | toUpperCase }}
 					</div></template></div>
 			<div id="leftArrow" on-click="{{onLeftArrowClick}}"> &lsaquo; </div>
@@ -813,7 +813,7 @@
 					<i18n-language-selector locale="{{locale}}" toggle="editingEnabled" on-updated="{{onEditingChange}}"></i18n-language-selector>
 				</template>
 			</div>
-			<div id="tab-content-site">
+			<div id="tab-content-site" hidden?="{{user.locales!='*'}}">
 				<template repeat="{{languages as locale}}">
 					<i18n-language-selector locale="{{locale}}" toggle="enabled" on-updated="{{onStateChange}}"></i18n-language-selector>
 				</template>
@@ -827,7 +827,11 @@
 				var self = this;
 				self.super();
 				var tabs = self.shadowRoot.querySelector("i18n-tabs");
-				tabs.list = [{ident:'edit', text:'Editing languages', selected : true },{ident:'site', text:'Site languages'}];
+				tabs.list = [{ident:'edit', text:'Editing languages', selected : true }, {ident:'site', text:'Site languages'}];
+				if (!self.user || self.user.locales != '*') {
+					tabs.list[1].hidden = true;
+				};
+				self.tabList = tabs.list;
 				tabs.getItem = function(id) {
 					return self.$['tab-content-'+id];
 				}
@@ -907,12 +911,19 @@
 					lang.ident = locale;
 				});
 
+				self.user = {
+					locales: ajax.response.locales
+				}
+
 				if (ajax.response.locales && ajax.response.locales != '*') {
 					var locales = ajax.response.locales.split(' ');
 					languages = _.filter(languages, function(l){
 						return (locales.indexOf(l.ident) > -1);
 					});
-				};
+				}
+				if (self.tabList)
+					self.tabList[1].hidden = (!ajax.response.locales || ajax.response.locales != '*');
+				
 
 				languages = _.filter(languages, function(l){
 					l.editingEnabled = !!self.getlocale(l.ident);
