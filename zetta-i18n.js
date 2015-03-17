@@ -294,12 +294,19 @@ function i18n(core) {
         self.storeEntries();
     });
 
-    self.on('delete', function(args) {
-        if (self.entries[args.hash]) {
-            delete self.entries[args.hash];
-            self.storeEntries();
-            self.dispatchToAll({op: 'delete', hash: args.hash});
-        }
+    self.on('delete', function(args, socket) {
+        core.getSocketSession(socket, function(err, session) {
+            if(!session || !session.i18n_user)
+                return console.log('locale-delete: request without session.');
+            if (session.i18n_user.locales!='*')
+                return console.log('locale-delete: dont have permissions');
+
+            if (self.entries[args.hash]) {
+                delete self.entries[args.hash];
+                self.storeEntries();
+                self.dispatchToAll({op: 'delete', hash: args.hash});
+            }
+        });
     });
 
     self.on('locale-update', function(args, socket) {

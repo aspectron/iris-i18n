@@ -598,11 +598,14 @@
 				float: right;
 				margin-right: 16px;
 			}
+			#toolbar [disabled]{
+				opacity: 0.3
+			}
 		</style>
 
 		<div id="content" flex>
 			<div id="toolbar">
-				<div id="delete" class="icon" on-click="{{deleteEntry}}" title="Delete Entry"></div>
+				<div id="delete" class="icon" disabled?="{{!data}}" hidden?="{{!ctl || !ctl.user || ctl.user.locales!='*'}}" on-click="{{deleteEntry}}" title="Delete Entry"></div>
 				<div id="toggleInput" disabled?="{{!data}}" class="icon" on-click="{{toggleInput}}" title="Toggle Input"></div>
 				<div id="logout" class="icon" on-click="{{logout}}" title="Logout"></div>
 			</div>
@@ -728,7 +731,7 @@
 			},
 
 			deleteEntry : function() {
-				if(window.confirm("Are you sure you want to delete this entry?")) {
+				if(this.data && window.confirm("Are you sure you want to delete this entry?")) {
 					i18n.rpc.dispatch({
 						op : 'delete',
 						hash : this.data.hash
