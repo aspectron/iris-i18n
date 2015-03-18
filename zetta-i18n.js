@@ -129,7 +129,7 @@ function i18n(core) {
             lines.push(n+'.');
         }
 
-        var text = lines.join('\n');
+        var text = lines.join('\n')+'\n';
 //        var text = '{\n'+lines.join('\n')+'\n}';
 
         fs.writeFileSync(self.entriesFile, text);
@@ -150,11 +150,18 @@ function i18n(core) {
         var data = fs.readFileSync(file, { encoding : 'utf8'});
         //self.entries = JSON.parse(data.replace(/^.*:\s?/gm,''));
         var lines = data.split('\n');
+        var ptr = 0;
         _.each(lines, function(l) {
 
-            var ident = l.match(/^\S{2,}/).shift();
+            var match = l.match(/^\S{2,}/);
+            if(!match)
+                return;
+            
+            var ident = match.shift();
             if(!ident)
                 return;
+
+            ptr++;
 
             // console.log('ident:',ident);
             // console.log('arg:',l.substr(ident.length));
