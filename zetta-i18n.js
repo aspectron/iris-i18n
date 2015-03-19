@@ -91,6 +91,7 @@ function i18n(core) {
     */
 
     function PAD(t) {
+        t += ' ';
         while(t.length < 12)
             t += ' ';
         return t;
