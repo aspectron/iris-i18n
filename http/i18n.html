@@ -275,6 +275,13 @@
 				padding: 1px 2px;
 				font-size: 10px;
 			}
+			.locale .exist{
+				border:1px solid rgba(204, 204, 204, 0.4);
+				padding: 1px 2px;
+				font-size: 10px;
+				margin-top: 2px;
+				display: inline-block;
+			}
 		</style>
 		<div id="content" hash="{{data.hash}}" class="{{ { selected : selected, missing: missing.length } | tokenList }}" on-click="{{select}}">
 			{{data.locale.en}}
@@ -282,6 +289,11 @@
 				<template repeat="{{ missing as l}}">
 					<span class="mis">{{l | toUpperCase()}}</span>
 				</template>
+				<div>
+				<template repeat="{{ localesexist as l}}">
+					<span class="exist">{{l | toUpperCase()}}</span>
+				</template>
+				</div>
 			</div>
 		</div>
 	</template>
@@ -294,6 +306,7 @@
 				var ctl = document.querySelector("i18n-ctl");
 				var editLanguages = ctl.getLanguages(true);
 				self.missing = [];
+				self.localesexist = _.keys(data.locale);
 				_.each(editLanguages, function(l){
 					if(!data.locale[l.ident]){
 						self.missing.push(l.ident);
