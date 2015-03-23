@@ -645,10 +645,10 @@
 								</td>
 								<td>
 									<template if="{{!data.multiline}}">
-										<input id="{{locale.ident}}" type="text" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}"/>
+										<input id="{{locale.ident}}" type="text" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}" style="{{(locale.ident == 'he'||locale.ident=='ar')?'direction:rtl;':''}}" />
 									</template>
 									<template if="{{data.multiline}}">
-										<textarea class="input" id="{{locale.ident}}" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}"></textarea>
+										<textarea class="input" id="{{locale.ident}}" value="{{data.locale[locale.ident]}}" on-keyup="{{update}}" style="{{(locale.ident == 'he'||locale.ident=='ar')?'direction:rtl;':''}}" ></textarea>
 									</template>
 								</td>
 							</tr>

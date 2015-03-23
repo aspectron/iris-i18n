@@ -476,8 +476,8 @@ function i18n(core) {
             if(lang == self.config.sourceLanguage)
                 return res.redirect('/'+parts.join('/'));
 
-            if(!l.enabled)
-                lang = self.config.sourceLanguage;
+            //if(!l.enabled)
+            //    lang = self.config.sourceLanguage;
 
             if(l && !parts.length)
                 return res.redirect('/'+lang+'/');
