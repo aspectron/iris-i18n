@@ -548,7 +548,7 @@
 		})
 	</script>
 </polymer-element>
-<polymer-element name="i18n-editor" attributes="data dispatchCount" layout vertical>
+<polymer-element name="i18n-editor" attributes="data" layout vertical>
 	<template>
 
 		<style>
@@ -644,7 +644,7 @@
 			<div id="toolbar">
 				<div id="delete" class="icon" disabled?="{{!data}}" hidden?="{{!ctl || !ctl.user || ctl.user.locales!='*'}}" on-click="{{deleteEntry}}" title="Delete Entry"></div>
 				<div id="toggleInput" disabled?="{{!data}}" class="icon" on-click="{{toggleInput}}" title="Toggle Input"></div>
-				<div id="status" hidden?="{{!data}}" class="icon {{i18n.dispatchCount>0 ? 'saving':'saved'}}" title="{{i18n.dispatchCount>0 ? 'Saving':'Saved'}}"></div>
+				<div id="status" class="icon {{i18n.dispatchCount>0 ? 'saving':'saved'}}" title="{{i18n.dispatchCount>0 ? 'Saving':'Saved'}}"></div>
 				<div id="logout" class="icon" on-click="{{logout}}" title="Logout"></div>
 			</div>
 			<br style="clear:both;"/>
