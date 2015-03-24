@@ -70,6 +70,8 @@ function i18n(core) {
     //self.userSettings = core.readJSON(self.userSettingFile);
     self.config = core.readJSON(self.configFile);
     self.sitemapConfig = core.getConfig('sitemap');
+    if(!self.sitemapConfig.baseUrl)
+        console.log("ERROR: sitemap.conf must contain baseUrl field");
     // console.log(self.sitemapConfig);
     //self.entries = core.readJSON(self.entriesFile) || { }
     self.basicCategory = 'basic';
@@ -415,7 +417,8 @@ function i18n(core) {
         });
 
         app.get('/robots.txt', function(req, res) {
-            res.end("Sitemap: "+req.protocol + '://' + req.headers.host+"/sitemap.xml");
+            res.end("Sitemap: "+self.sitemapConfig.baseUrl+'/sitemap.xml');
+            //res.end("Sitemap: "+req.protocol + '://' + req.headers.host+"/sitemap.xml");
         });
 
         app.get('/sitemap.xml', function (req, res, next) {
