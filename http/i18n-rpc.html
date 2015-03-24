@@ -71,17 +71,16 @@
                 })
 
                 function timeoutMonitor() {
-                    // var self = this;
                     var ts = Date.now();
                     var purge = [ ]
-                    _.each(this.pending, function(info, id) {
+                    _.each(self.pending, function(info, id) {
                         if(ts - info.ts > self.timeout * 1000) {
                             info.callback({ error : "Timeout "});
                             purge.push(id);
                         }
                     })
                     _.each(purge, function(id) {
-                        delete pending[id];
+                        delete self.pending[id];
                     })
                     dpc(1000, timeoutMonitor);
                 }
