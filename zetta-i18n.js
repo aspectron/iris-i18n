@@ -289,48 +289,55 @@ function i18n(core) {
         }); 
     })
 
-    self.on('update', function(args, socket) {
+    self.on('update', function(args, callback) {
         var entry = self.entries[args.hash];
         entry.locale[args.locale] = args.text;
         entry.multiline = args.multiline;
         self.storeEntries();
+        //setTimeout(function(){
+        callback(null, {success: true})
+        //}, 50000);
     });
 
-    self.on('update-note', function(args, socket) {
+    self.on('update-note', function(args, callback) {
         var entry = self.entries[args.hash];
         entry.note = args.note;
         self.storeEntries();
+        callback(null, {success: true})
     });
 
-    self.on('delete', function(args, socket) {
-        core.getSocketSession(socket, function(err, session) {
+    self.on('delete', function(args, callback) {
+        core.getSocketSession(this, function(err, session) {
             if(!session || !session.i18n_user)
-                return console.log('locale-delete: request without session.');
+                return callback({error: 'Delete Request: Session missing.'});
             if (session.i18n_user.locales!='*')
-                return console.log('locale-delete: dont have permissions');
+                return callback({error: 'Delete Request: You don\'t have permissions.'});
 
             if (self.entries[args.hash]) {
                 delete self.entries[args.hash];
                 self.storeEntries();
                 self.dispatchToAll({op: 'delete', hash: args.hash});
             }
+
+            callback(null, {success: true})
         });
     });
 
-    self.on('locale-update', function(args, socket) {
-        core.getSocketSession(socket, function(err, session) {
+    self.on('locale-update', function(args, callback) {
+        core.getSocketSession(this, function(err, session) {
             if(!session || !session.i18n_user)
-                return console.log('locale-update: request without session.');
+                return callback({error: 'Locale update request: Session missing.'});
             if (session.i18n_user.locales!='*')
-                return console.log('locale-update: dont have permissions');
+                return callback({error: 'Locale update request: You don\'t have permissions.'});
 
             var l = self.config.languages[args.locale.ident];
             if (!l)
-                return console.log('invalid local.ident', args.local.ident);
+                return callback({error: 'Invalid local.ident', ident: args.local.ident});
 
             l.enabled = !!args.locale.enabled;
             self.storeConfig();
             self.updateEnabled();
+            callback(null, {success: true})
         });
     });
     

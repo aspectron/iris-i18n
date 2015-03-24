@@ -1,5 +1,23 @@
 <script>
-	var i18n = { }
+	var i18n = {
+		dispatchCount: 0,
+		dispatch: function(msg, callback){
+			var self = this;
+			self.dispatchCount++;
+			self.rpc.dispatch(msg, function(err, result){
+				if (callback) {
+					callback(err, result)
+				};
+
+				if (result && result.success){
+					self.dispatchCount--;
+				}else{
+					alert('Error: Could not compelete last operation. \nTry it again or reload the page.'+( (err && err.error)? '\n( '+err.error+' )':'' ))
+					self.dispatchCount--;
+				}
+			})
+		}
+	}
 </script>
 <polymer-element name="i18n-select" attributes="current list">
 	<template>
@@ -530,7 +548,7 @@
 		})
 	</script>
 </polymer-element>
-<polymer-element name="i18n-editor" attributes="data" layout vertical>
+<polymer-element name="i18n-editor" attributes="data dispatchCount" layout vertical>
 	<template>
 
 		<style>
@@ -611,6 +629,12 @@
 				float: right;
 				margin-right: 16px;
 			}
+			#status{
+				background: center no-repeat url('images/enabled-pale.png');
+			}
+			#status.saving{
+				background-image: url("images/disabled-pale.png");
+			}
 			#toolbar [disabled]{
 				opacity: 0.3
 			}
@@ -620,6 +644,7 @@
 			<div id="toolbar">
 				<div id="delete" class="icon" disabled?="{{!data}}" hidden?="{{!ctl || !ctl.user || ctl.user.locales!='*'}}" on-click="{{deleteEntry}}" title="Delete Entry"></div>
 				<div id="toggleInput" disabled?="{{!data}}" class="icon" on-click="{{toggleInput}}" title="Toggle Input"></div>
+				<div id="status" hidden?="{{!data}}" class="icon {{i18n.dispatchCount>0 ? 'saving':'saved'}}" title="{{i18n.dispatchCount>0 ? 'Saving':'Saved'}}"></div>
 				<div id="logout" class="icon" on-click="{{logout}}" title="Logout"></div>
 			</div>
 			<br style="clear:both;"/>
@@ -673,6 +698,7 @@
 		Polymer("i18n-editor", {
 			domReady : function() {
 				var self = this;
+				self.i18n = i18n;
 				i18n.rpc.on('update', function(args) {
 					if(args.hash == self.data.hash) {
 						var input = self.shadowRoot.querySelector('#'+args.locale);
@@ -714,7 +740,7 @@
 			},
 
 			updateNote: function(e, n, el){
-				i18n.rpc.dispatch({
+				i18n.dispatch({
 					op : 'update-note',
 					hash : this.data.hash,
 					note : el.value
@@ -723,7 +749,7 @@
 			},
 
 			update : function(e, n, el) {
-				i18n.rpc.dispatch({
+				i18n.dispatch({
 					op : 'update',
 					hash : this.data.hash,
 					locale : el.id,
@@ -745,7 +771,7 @@
 
 			deleteEntry : function() {
 				if(this.data && window.confirm("Are you sure you want to delete this entry?")) {
-					i18n.rpc.dispatch({
+					i18n.dispatch({
 						op : 'delete',
 						hash : this.data.hash
 					});
@@ -829,7 +855,7 @@
 					<i18n-language-selector locale="{{locale}}" toggle="editingEnabled" on-updated="{{onEditingChange}}"></i18n-language-selector>
 				</template>
 			</div>
-			<div id="tab-content-site" hidden?="{{user.locales!='*'}}">
+			<div id="tab-content-site" hidden1?="{{user.locales!='*'}}">
 				<template repeat="{{languages as locale}}">
 					<i18n-language-selector locale="{{locale}}" toggle="enabled" on-updated="{{onStateChange}}"></i18n-language-selector>
 				</template>
@@ -870,7 +896,7 @@
 
 			onStateChange: function(e){
 				var locale = e.detail;
-				i18n.rpc.dispatch({
+				i18n.dispatch({
 					op : 'locale-update',
 					locale : locale
 				});
