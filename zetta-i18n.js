@@ -63,13 +63,16 @@ function i18n(core) {
     events.EventEmitter.call(this);
 
     self.configFile = path.join(core.appFolder,'config/i18n.conf');
-    self.sitemapFile = path.join(core.appFolder,'config/sitemap.conf');
+    //self.sitemapFile = path.join(core.appFolder,'config/sitemap');
     //self.userSettingFile = path.join(core.appFolder,'config/i18n.user.conf');
     self.entriesFile = path.join(core.appFolder,'config/i18n.data');
 
     //self.userSettings = core.readJSON(self.userSettingFile);
     self.config = core.readJSON(self.configFile);
-    self.sitemapConfig = core.readJSON(self.sitemapFile);
+    self.sitemapConfig = core.getConfig('sitemap');
+    if(!self.sitemapConfig.baseUrl)
+        console.log("ERROR: sitemap.conf must contain baseUrl field");
+    // console.log(self.sitemapConfig);
     //self.entries = core.readJSON(self.entriesFile) || { }
     self.basicCategory = 'basic';
     self.flush = false;
@@ -421,7 +424,8 @@ function i18n(core) {
         });
 
         app.get('/robots.txt', function(req, res) {
-            res.end("Sitemap: "+req.protocol + '://' + req.headers.host+"/sitemap.xml");
+            res.end("Sitemap: "+self.sitemapConfig.baseUrl+'/sitemap.xml');
+            //res.end("Sitemap: "+req.protocol + '://' + req.headers.host+"/sitemap.xml");
         });
 
         app.get('/sitemap.xml', function (req, res, next) {
