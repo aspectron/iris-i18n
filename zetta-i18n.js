@@ -510,7 +510,7 @@ function i18n(core) {
 
             req._T.locale = req._i18n_locale || self.config.sourceLanguage;
             req._T.languages = self.enabledLanguages;
-            req._T.allLanguages = self.config.languages;
+            req._T.availableLanguages = self.config.languages;
             req._T.source = self.config.sourceLanguage;
             res.locals._T = req._T;
 
