@@ -503,10 +503,16 @@ function i18n(core) {
         })
 
         app.use(function(req, res, next) {
-            req._T = function (text, loc) {
-                loc = loc || req._i18n_locale;
-                return self.translate(text, loc);
-            };
+             if (self.config.test) {
+                req._T = function (text, loc) {
+                    return "~"+text+"~";
+                }
+            }else{
+                req._T = function (text, loc) {
+                    loc = loc || req._i18n_locale;
+                    return self.translate(text, loc);
+                };
+            }
 
             req._T.locale = req._i18n_locale || self.config.sourceLanguage;
             req._T.languages = self.enabledLanguages;
