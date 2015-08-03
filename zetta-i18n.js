@@ -505,7 +505,7 @@ function i18n(core) {
         app.use(function(req, res, next) {
              if (self.config.test) {
                 req._T = function (text, loc) {
-                    loc = loc || req._i18n_locale;
+                    loc = loc || req._i18n_locale || '';
                     return "~"+loc+'::'+text+"~";
                 }
             }else{
