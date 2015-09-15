@@ -1,5 +1,5 @@
-# zetta-i18n
+# iris-i18n
 
-Zetta Toolkit - Site Localisation Module
+IRIS Toolkit - Site Localisation Module
 -----
 

@@ -1,6 +1,6 @@
 {
-  "name": "zetta-i18n",
-  "description": "Zetta Toolkit - Site Localisation Module",
+  "name": "iris-i18n",
+  "description": "IRIS Toolkit - Site Localisation Module",
   "version": "0.1.12",
   "author": {
     "name": "ASPECTRON Inc.",
@@ -16,17 +16,17 @@
     "framework",
     "json",
     "rpc",
-    "zetta",
+    "iris",
     "translation"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/aspectron/zetta-i18n"
+    "url": "git://github.com/aspectron/iris-i18n"
   },
-  "main": "zetta-i18n",
+  "main": "iris-i18n",
   "files": [
     "README.md",
-    "zetta-i18n.js",
+    "iris-i18n.js",
     "views",
     "http",
     "config"
@@ -39,8 +39,8 @@
   },
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/aspectron/zetta-i18n/issues"
+    "url": "https://github.com/aspectron/iris-i18n/issues"
   },
   "license": "MIT",
-  "homepage": "https://github.com/aspectron/zetta-i18n"
+  "homepage": "https://github.com/aspectron/iris-i18n"
 }

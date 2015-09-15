@@ -1,5 +1,5 @@
 //
-// -- Zetta Toolkit - Site Localisation Module
+// -- IRIS Toolkit - Site Localisation Module
 //
 //  Copyright (c) 2014-2015 ASPECTRON Inc.
 //  All Rights Reserved.
