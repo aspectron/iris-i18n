@@ -1,7 +1,7 @@
 {
   "name": "iris-i18n",
-  "description": "IRIS Toolkit - Site Localisation Module",
-  "version": "0.1.12",
+  "description": "IRIS Application Framework - Site Localisation Module",
+  "version": "0.1.14",
   "author": {
     "name": "ASPECTRON Inc.",
     "email": "info@aspectron.com"

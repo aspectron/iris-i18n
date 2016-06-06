@@ -1,7 +1,7 @@
 //
 // -- IRIS Toolkit - Site Localisation Module
 //
-//  Copyright (c) 2014-2015 ASPECTRON Inc.
+//  Copyright (c) 2014-2016 ASPECTRON Inc.
 //  All Rights Reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -63,12 +63,17 @@ function i18n(core) {
     events.EventEmitter.call(this);
 
     self.configFile = path.join(core.appFolder,'config/i18n.conf');
+    self.usersFile = path.join(core.appFolder,'config/i18n.users');
     //self.sitemapFile = path.join(core.appFolder,'config/sitemap');
     //self.userSettingFile = path.join(core.appFolder,'config/i18n.user.conf');
     self.entriesFile = path.join(core.appFolder,'config/i18n.data');
 
     //self.userSettings = core.readJSON(self.userSettingFile);
     self.config = core.readJSON(self.configFile);
+
+    var users_ = core.readJSON(self.usersFile) || { };
+    self.users = _.extend({ }, self.config.users, users_);
+
     self.sitemapConfig = core.getConfig('sitemap');
     if(!self.sitemapConfig.baseUrl)
         console.log("ERROR: sitemap.conf must contain baseUrl field");
