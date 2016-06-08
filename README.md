@@ -14,9 +14,11 @@ iris-i18n requires EJS rendering engine.
 * `i18n.users` - configuration for user accounts
 * `i18n.data` - data file containing all translation entries
 
+#### i18n.conf
+
 `i18n.conf` mainly contains list of supported languages and is automatically saved each time options are changed in the translation backend (enabling/disabling active languages).
 
-**TBD - include example file in the repo**
+#### i18n.users
 
 `i18n.users` should be created locally when your application is deployed.  It must not be present in git (unless your project is a private repository)
 
@@ -34,6 +36,7 @@ User login to the i18n backend uses geometric back-off algorithm, which means th
 
 To generate a password, you can use simple hex output of sha256.  This can be easily done here: http://www.xorbin.com/tools/sha256-hash-calculator or in NodeJs: `console.log(require("crypto").createHash("sha256").update("<password>").digest("hex"))`
 
+#### i18n.data
 
 `i18n.data` is a custom data format that is kept in git and lives together with your project.  The file format is custom in order to allow easier merging when encountering git merge conflicts.
 
