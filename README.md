@@ -24,13 +24,15 @@ User configuration is done as follows:
 ```
 {
 	"<username>" : {
-		"locales" : "en fr",	// or "*" for all  (controls access to specific languages)
+		"locales" : "en fr",	// or "*" for all  (controls access to specific languages, space separated locale codes)
 		"pass" : "<sha256>"		// hex sha256 of pass
 	}
 }
 ```
 
-User login to the i18n backend uses geometric back-off algorithm, which means that each time incorrect login is made, the amount of seconds user has to wait doubles.
+User login to the i18n backend uses geometric back-off algorithm, which means that each time incorrect login is made from a specific IP, the amount of seconds user has to wait doubles.
+
+To generate a password, you can use simple hex output of sha256.  This can be easily done here: http://www.xorbin.com/tools/sha256-hash-calculator or in NodeJs: `console.log(require("crypto").createHash("sha256").update("<password>").digest("hex"))`
 
 
 `i18n.data` is a custom data format that is kept in git and lives together with your project.  The file format is custom in order to allow easier merging when encountering git merge conflicts.
