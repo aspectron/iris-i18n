@@ -1,7 +1,7 @@
 {
   "name": "iris-i18n",
-  "description": "IRIS Application Framework - Site Localisation Module",
-  "version": "0.1.15",
+  "description": "IRIS - Site Localisation Module",
+  "version": "0.1.16",
   "author": {
     "name": "ASPECTRON Inc.",
     "email": "info@aspectron.com"
@@ -29,7 +29,8 @@
     "iris-i18n.js",
     "views",
     "http",
-    "config"
+    "config",
+    "doc"
   ],
   "scripts": {
     "prepublish": "npm prune"
