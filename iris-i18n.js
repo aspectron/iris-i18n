@@ -397,7 +397,7 @@ function i18n(core) {
             }
             else {
                 info.ts = ts;
-                user  = self.config.users[user];
+                user  = self.users[user];
                 if(!user || !user.pass)
                     return res.status(401).end();
 
