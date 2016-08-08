@@ -32,8 +32,8 @@ var util = require('util');
 var events = require('events');
 var basicAuth = require('basic-auth');
 
-if(!GLOBAL.dpc)
-    GLOBAL.dpc = function(t,fn) { if(typeof(t) == 'function') setTimeout(t,0); else setTimeout(fn,t); }
+if(!global.dpc)
+    global.dpc = function(t,fn) { if(typeof(t) == 'function') setTimeout(t,0); else setTimeout(fn,t); }
 
 String.prototype.strtr = function (replacePairs) {
     var str = this.toString(), key, re;

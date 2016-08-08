@@ -51,7 +51,7 @@ To check if any translation has been done, you can simply do `git diff` in your 
 
 ## Usage
 
-`iris-i18n` provides a variable `_T` globally available within the EJS rendering context.  `_T` is a function and a variable container (object) at the same time.  Following variables are available under `_T`:
+`iris-i18n` provides a variable `_T` globally available within the EJS rendering context.  `_T` is a function and a variable container (object) at the same time.  Following fields are available under `_T`:
 
 * `_T.locale` - current locale code
 * `_T.languages` - list of active/enabled languages
