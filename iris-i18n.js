@@ -530,6 +530,48 @@ function i18n(core) {
 
             next();            
         })
+
+        app.use(function(req, res, next) {
+            var _T = req._T;
+            _T.getAlternateLinks = function(host){
+                host = host || req.protocol+"://"+req.get('host');
+                var suffix = req.url.charAt(0) == '/' ? '' : '/';
+                var result = {list:[], links:[]}, href, lang;
+                var _aliases = {}, aliases = self.config.language_aliases || {};
+                var added = {};
+                _.each(aliases, function(lang, alias){
+                    _aliases[lang] = alias;
+                })
+                _.each(_T.languages, function(c, code){
+                    href    = host+(code == _T.source ? '' : '/'+code+suffix)+req.url;
+                    if(_aliases[code])
+                        code = _aliases[code]
+                    lang    = code.replace("_", "-");
+                    addLink(lang, href)
+                    lang    = lang.split("-")[0]; 
+                    addLink(lang, href)
+                });
+
+                function addLink(lang, href){
+                    if(added[lang])
+                        return;
+                    added[lang] = true;
+                    var tag     = '<link rel="alternate" href="'+href+'" hreflang="'+lang+'" />';
+                    result.list.push({
+                        tag: tag,
+                        lang: lang,
+                        href: href
+                    });
+                    result.links.push(tag);
+                }
+                result.toString = function(){
+                    return result.links.join("\n\t")
+                }
+                return result;
+            }
+
+            next();
+        });
     }
 
     self.translate = function(text, locale, params, category) {
