@@ -139,7 +139,7 @@ function i18n(core) {
         }
 
         var text = lines.join('\n')+'\n';
-//        var text = '{\n'+lines.join('\n')+'\n}';
+        //var text = '{\n'+lines.join('\n')+'\n}';
 
         fs.writeFileSync(self.entriesFile, text);
         // core.writeJSON(self.entriesFile, self.entries);
@@ -737,24 +737,33 @@ function i18n(core) {
 
             data = data.toString('utf8');
 
-            var matches = [];
 
             // syntax _T("It's wonderful life")
+            var matches = [];
             matches = matches.concat(data.match(/_T\(\"[^\"]+\"\)/gi));
             matches = matches.concat(data.match(/_T\(\'[^\']+\'\)/gi));
-
             _.each(matches, function (match) {
                 if (match) {
                     self.createEntry(match.substring(4, match.length - 2), '', file);
                 }
             });
 
-            var matches = [];
+            if(self.config.enableHBSTemplates){
+                // syntax {{_T "It's wonderful life"}}//handlbars template
+                matches = [];
+                matches = matches.concat(data.match(/\{\{_T "[^\"]+\"\}\}/gi));
+                matches = matches.concat(data.match(/\{\{_T '[^\']+\'\}\}/gi));
+                _.each(matches, function (match) {
+                    if (match) {
+                        self.createEntry(match.substring(6, match.length - 3), '', file);
+                    }
+                });
+            }
 
             // syntax 'Hello world'._T()
+            matches = [];
             matches = matches.concat(data.match(/\'[^\']+\'._T/gi));
             matches = matches.concat(data.match(/\"[^\"]+\"._T/gi));
-
             _.each(matches, function (match) {
                 if (match) {
                     self.createEntry(match.substring(1, match.length - 4), '', file);
