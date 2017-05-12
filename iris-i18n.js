@@ -587,7 +587,7 @@ function i18n(core) {
             try{
                 Error.prepareStackTrace =  function(error, r){
                     _.each(r, function(e){
-                        var fnBody = e.getFunction().toString();
+                        var fnBody = e.getFunction()+"";
                         if(fnBody.indexOf('_T("'+text+'")')>-1 || fnBody.indexOf("_T('"+text+"')")>-1){
                             file = e.getFileName();
                         }
