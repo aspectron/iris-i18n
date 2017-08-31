@@ -82,12 +82,14 @@ function i18n(core) {
     self.basicCategory = 'basic';
     self.flush = false;
 
-    self.entries = { }
-    restoreEntries(self.entriesFile);
-
-    _.each(self.entries, function(entry) {
-        entry.orphan = true;
+    var argv = {};
+    _.each(process.argv.slice(2), function (a) {
+        argv[a.split("=")[0]] = a.split("=")[1] || true;
     })
+
+    self.resetEntries = argv["--reset-i18n"]==true;
+
+    self.entries = { }
 
     self.storeConfig = function() {
         core.writeJSON(self.configFile, self.config);
@@ -149,6 +151,12 @@ function i18n(core) {
         //fs.writeFileSync(self.entriesFile.replace('.data','.xml'), xml);
     }, 3000);
 
+    restoreEntries(self.entriesFile);
+
+    _.each(self.entries, function(entry) {
+        entry.orphan = true;
+    })
+
 
     function restoreEntries(file) {
         if(!fs.existsSync(file)) {
@@ -205,8 +213,19 @@ function i18n(core) {
             if(!e.hash)
                 return;
 
+            if(self.resetEntries){
+                if(_.keys(e.locale).length == 1 && e.locale.en){
+                    console.log("removing : i18n-entry", e.hash)
+                    return;
+                }
+            }
+
             self.entries[e.hash] = e;
         })
+
+        if(self.resetEntries){
+            self.storeEntries();
+        }
 
     }
 
