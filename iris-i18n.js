@@ -367,6 +367,15 @@ function i18n(core) {
             callback(null, {success: true})
         });
     });
+
+    self.getSiteMapConfig = function(req, res){
+        var options = self.sitemapConfig;
+        if(res.locals.subdomain){
+            return (options.subdomains || {})[res.locals.subdomain] || {};
+        }
+
+        return options;
+    }
     
 
     self.initHttp = function(app) {
@@ -448,12 +457,13 @@ function i18n(core) {
         });
 
         app.get('/robots.txt', function(req, res) {
-            res.end("Sitemap: "+self.sitemapConfig.baseUrl+'/sitemap.xml');
+            var conf = self.getSiteMapConfig(req, res);
+            res.end("Sitemap: "+conf.baseUrl+'/sitemap.xml');
             //res.end("Sitemap: "+req.protocol + '://' + req.headers.host+"/sitemap.xml");
         });
 
         app.get('/sitemap.xml', function (req, res, next) {
-            var options = self.sitemapConfig;
+            var options = self.getSiteMapConfig(req, res);
             if (!options.baseUrl) {
                 options.baseUrl = req.protocol + '://' + req.headers.host;
             }
