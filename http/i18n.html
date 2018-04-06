@@ -374,7 +374,7 @@
 		})
 	</script>
 </polymer-element>
-<polymer-element name="i18n-browser" attributes="list" layout vertical>
+<polymer-element name="i18n-browser" attributes="list domains" layout vertical>
 	<template>
 		<link rel="stylesheet" type="text/css" href="css/base.css" />
 		<style>
@@ -437,6 +437,17 @@
 					<div>{{list.length}} Entries ({{filtered.length}} Showing)</div>
 					<div>{{totalWords}} Words ({{uniqueWords}} Unique)</div>
 				</div>
+				<!--core-selector style="display:none" selected="{{selectedDomains}}" target="{{$.domains}}"
+					valueattr="value" multi itemsSelector="option" selectedAttribute="selected"
+					activateEvent="change" >
+				</core-selector-->
+				<select id="domains" flex multiple="" size="1" style="height:32px" on-change="{{onDomainSelectionChanged}}" >
+					<option value="all" selected="">All</option>
+					<option value="main">Main</option>
+					<template repeat="{{domains as domain}}">
+						<option value="{{domain.name}}">[[domain.title]]</option>
+					</template>
+				</select>
 				<div class="icon {{hideTranslated?'hide':'show'}}-translated" title="{{hideTranslated? 'Show Translated': 'Hide Translated'}}" on-click="{{toggleTranslated}}"></div>
 			</div>
 			<div class="search">
@@ -455,6 +466,7 @@
 		Polymer("i18n-browser", {
 			filtered : [],
 			search : '',
+			selectedDomains: {all:1},
 
 			ready : function() {
 				var self = this;
@@ -477,10 +489,45 @@
 				return _.filter(text.split(' '), function(v){ return !!v;});
 			},
 
+			updateSelectedDomains: function(select){
+				var options = this.$.domains.querySelectorAll("option");
+				_.each(options, function(o){
+					if(select.indexOf(o.value) > -1){
+						o.selected = true
+						o.setAttribute("selected", "selected")
+					}else{
+						o.selected = false;
+						o.removeAttribute("selected")
+					}
+				})
+			},
+
+			onDomainSelectionChanged: function(){
+				var self = this;
+				var selection = _.map(self.$.domains.selectedOptions, function(o){
+					return o.value;
+				})
+
+				if(!selection.length){
+					selection = ["all"];
+					setTimeout(function(){
+						self.updateSelectedDomains(selection)
+					}, 100)
+					
+				}
+
+				self.selectedDomains = {};
+				_.each(selection, function(a){
+					self.selectedDomains[a] = 1;
+				})
+
+				self.listChanged();
+			},
+
 			listChanged : function() {
 				var self = this;
 				self.filter();
-				var list = self.list;
+				var list = self.filtered;
 				var words = [];
 				_.each(list, function(item){
 					words = words.concat(self.getWords(item.locale.en));
@@ -516,8 +563,12 @@
 
 			filter : function() {
 				var self = this;
+				//console.log("allDomains", self.selectedDomains)
+				var allDomains = !!self.selectedDomains.all;
 
-				if(!self.search.length && !self.hideTranslated) {
+				var selectedDomains = _.keys(self.selectedDomains);
+
+				if(!self.search.length && !self.hideTranslated && allDomains) {
 					self.filtered = self.list;
 					return;
 				}
@@ -526,7 +577,18 @@
 				var editLanguages = ctl.getLanguages(true);
 				self.filtered = _.filter(self.list, function(e) {
 					return (!self.search.length || e.locale.en.toLowerCase().indexOf(search) != -1)
-						&& (!self.hideTranslated || !self.isTranslated(editLanguages, e));
+						&& (!self.hideTranslated || !self.isTranslated(editLanguages, e))
+						&& (allDomains || self.domainCheck(e, selectedDomains));
+				})
+			},
+
+			domainCheck: function(entry, domains){
+				//console.log("entry, domains", entry, domains)
+				if(!entry.domains || !entry.domains.length)
+					return false;
+
+				return _.find(domains, function(domain){
+					return entry.domains.indexOf(domain) > -1;
 				})
 			},
 
@@ -641,6 +703,7 @@
 			#toolbar [disabled]{
 				opacity: 0.3
 			}
+			.domains{padding-left:10px}
 		</style>
 
 		<div id="content" flex>
@@ -691,6 +754,12 @@
 							<div>
 								{{file}}
 							</div>
+						</template>
+					</div>
+					<div>DOMAINS:</div>
+					<div class="domains">
+						<template repeat="{{ data.domains as domain }}">
+							<span>{{domain}}</span>,
 						</template>
 					</div>
 				</div>
@@ -984,6 +1053,7 @@
 					self.editor = document.querySelector("i18n-editor");
 
 				self.browser.list = _.values(ajax.response.entries);
+				self.browser.domains = _.values(ajax.response.domains);
 			}
 		})
 	</script>

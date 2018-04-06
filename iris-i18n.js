@@ -61,6 +61,7 @@ String.prototype.$ = function (replacePairs) {
 function i18n(core) {
     var self = this;
     events.EventEmitter.call(this);
+    self.domains = {};
 
     self.configFile = path.join(core.appFolder,'config/i18n.conf');
     self.usersFile = path.join(core.appFolder,'config/i18n.users');
@@ -119,7 +120,7 @@ function i18n(core) {
             lines.push(n+'.');
 
             _.each(e, function(l, ident) {
-                if(ident == 'locale' || ident == 'files')
+                if(ident == 'locale' || ident == 'files' || ident == 'domains')
                     return;
                 lines.push(n+PAD('.'+ident)+JSON.stringify(l));
             })
@@ -127,6 +128,10 @@ function i18n(core) {
             // lines.push(n+'.files')
             _.each(e.files, function(l, ident) {
                 lines.push(n+PAD('.file')+JSON.stringify(l));
+            })
+
+            _.each(e.domains, function(l, ident) {
+                lines.push(n+PAD('.domain')+JSON.stringify(l));
             })
 
             //lines.push(n+':\t"locale": {')
@@ -192,7 +197,7 @@ function i18n(core) {
             // console.log("hash:",hash)
             var e = self.entries[hash];
             if(!e) {
-                e = self.entries[hash] = { files : [ ], locale : { } }
+                e = self.entries[hash] = { files : [ ], locale : { }, domains:[] }
             }
 
             var prop = ident.shift();
@@ -201,6 +206,9 @@ function i18n(core) {
 
             if(prop == 'file') {
                 e.files.push(v);
+            }
+            else if(prop == 'domain') {
+                e.domains.push(v);
             }
             else
             if(prop == 'locale') {
@@ -480,10 +488,25 @@ function i18n(core) {
         })
 
         app.get('/i18n/get', function(req, res) {
+            var domainNames = _.keys(self.domains);
+
+            var domains = [];
+            var subdomains = self.config.subdomains || {};
+            _.each(domainNames, function(name){
+                if(name == "main")
+                    return
+                var title = subdomains[name] && subdomains[name].title;
+                domains[domains.length] = {
+                    name:name,
+                    title:title || name[0].toUpperCase() + name.substr(1)
+                }
+            })
+
             res.json({
                 config : self.config,
                 entries : self.entries,
-                locales : req.session.i18n_user.locales
+                locales : req.session.i18n_user.locales,
+                domains: domains
             });
         })
 
@@ -540,12 +563,12 @@ function i18n(core) {
              if (self.config.test) {
                 req._T = function (text, loc) {
                     loc = loc || req._i18n_locale || '';
-                    return "~"+loc+'::'+text+"~";
+                    return "~"+loc+'::'+self.getSubDomain(req, res)+"::"+text+"~";
                 }
             }else{
                 req._T = function (text, loc) {
                     loc = loc || req._i18n_locale;
-                    return self.translate(text, loc);
+                    return self.translate(text, loc, null, null, self.getSubDomain(req, res));
                 };
             }
 
@@ -603,13 +626,32 @@ function i18n(core) {
         });
     }
 
-    self.translate = function(text, locale, params, category) {
+    self.getSubDomain = function(req, res){
+        if(!self.config.useSubDomain)
+            return false;
+        var name = res.locals.subdomain || "main";
+
+        self.domains[name] = 1;
+        return name;
+    }
+
+    self.translate = function(text, locale, params, category, subdomain) {
 
         var hash = self.hash(text);
         var entry = self.entries[hash];
         if(entry) {
             entry.orphan = false;
             text = entry.locale[locale] || text;
+            if(subdomain && _.isString(subdomain)){
+                if(!entry.domains){
+                    entry.domains = [subdomain];
+                    self.storeEntries();
+                }else if(entry.domains.indexOf(subdomain) < 0){
+                    entry.domains.push(subdomain);
+                    self.storeEntries();
+                }
+            }
+
         }
         else {
             var file = '';
@@ -631,7 +673,7 @@ function i18n(core) {
                 //console.log(e)
             }
 
-            self.createEntry(text, category, file) && self.storeEntries();
+            self.createEntry(text, category, file, subdomain) && self.storeEntries();
         }
 
         if(params) {
@@ -641,7 +683,7 @@ function i18n(core) {
         return text;
     }
 
-    self.createEntry = function (text, category, _file) {
+    self.createEntry = function (text, category, _file, subdomain) {
         var hash = self.hash(text);
         var file = _file? _file.replace(/\\/g,'/') : '';
 
@@ -668,6 +710,9 @@ function i18n(core) {
                 ts : Date.now()
             };
 
+            if(subdomain && _.isString(subdomain))
+                self.entries[hash].domains = [subdomain];
+
             self.config.debug && console.log('i18n: Creating new entry:', '"'+text+'"');
             self.flush = true;
             return true;
@@ -677,6 +722,14 @@ function i18n(core) {
             var entry = self.entries[hash];
             entry.orphan = false;
             file = file.replace(core.appFolder, '');
+            if(subdomain && _.isString(subdomain)){
+                if(!entry.domains){
+                    entry.domains = [subdomain];
+                }else if(entry.domains.indexOf(subdomain) < 0){
+                    entry.domains.push(subdomain);
+                }
+            }
+
             if (file && !_.contains(entry.files, file)) {
                 entry.files.push(file);
                 self.flush = true;
