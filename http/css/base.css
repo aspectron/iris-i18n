@@ -1,0 +1,12 @@
+.layout.vertical,
+[layout][vertical]{
+	display:flex;
+	flex-direction:column;
+}
+.layout.horizontal,
+[layout][horizontal]{
+	display:flex;
+	flex-direction:row;
+}
+
+.flex,[flex]{flex:1;}
