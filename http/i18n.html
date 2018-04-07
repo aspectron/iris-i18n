@@ -423,31 +423,59 @@
 				background: no-repeat top left scroll;
 				background-size: 24px 24px;
 			}
+			#domains{
+				border-bottom:1px solid #CCCCCC;
+			}
 
-			.hide-translated {
+			#domains label{
+				padding: 3px 0px;
+    			margin: 0px 2px;
+				display:inline-block;
+				-webkit-appearance:none;
+				cursor:pointer;
+			}
+
+			#domains label input{
+				background:2px center no-repeat;
+				-webkit-appearance:none;
+				width:16px;
+				height:16px;
+				background-size:14px;
+				vertical-align: middle;
+    			margin: -2px 2px 0px;
+			}
+			#domains label input:focus{outline:none;}
+
+			.hide-translated,
+			#domains label input{
 				background-image: url("images/unchecked-checkbox.svg");
 			}
-			.show-translated {
+			#domains .label{
+				padding-left:2px;
+				cursor:default;
+			}
+			.show-translated,
+			#domains label input:checked{
 				background-image: url("images/checked-checkbox.svg");
+			}
+			#domains label:focus input:checked{
+				background-image: url("images/checked-checkbox-light.svg");
 			}
 		</style>
 		<div layout vertical flex>
+			<div id="domains" title="Use CTRL/CMD + Click to select multiple">
+				<label class="label">Domains :</label>
+				<label><input value="all" type="checkbox" on-click="{{onDomainSelectionChanged}}" />All</label>
+				<label><input value="main" type="checkbox" on-click="{{onDomainSelectionChanged}}" /> Main</label>
+				<template repeat="{{domains as domain}}">
+					<label><input value="{{domain.name}}" type="checkbox" on-click="{{onDomainSelectionChanged}}" /> [[domain.title]]</label>
+				</template>
+			</div>
 			<div class='stats' layout horizontal>
 				<div flex>
 					<div>{{list.length}} Entries ({{filtered.length}} Showing)</div>
 					<div>{{totalWords}} Words ({{uniqueWords}} Unique)</div>
 				</div>
-				<!--core-selector style="display:none" selected="{{selectedDomains}}" target="{{$.domains}}"
-					valueattr="value" multi itemsSelector="option" selectedAttribute="selected"
-					activateEvent="change" >
-				</core-selector-->
-				<select id="domains" flex multiple="" size="1" style="height:32px" on-change="{{onDomainSelectionChanged}}" >
-					<option value="all" selected="">All</option>
-					<option value="main">Main</option>
-					<template repeat="{{domains as domain}}">
-						<option value="{{domain.name}}">[[domain.title]]</option>
-					</template>
-				</select>
 				<div class="icon {{hideTranslated?'hide':'show'}}-translated" title="{{hideTranslated? 'Show Translated': 'Hide Translated'}}" on-click="{{toggleTranslated}}"></div>
 			</div>
 			<div class="search">
@@ -490,23 +518,32 @@
 			},
 
 			updateSelectedDomains: function(select){
-				var options = this.$.domains.querySelectorAll("option");
-				_.each(options, function(o){
+				var inputs = this.$.domains.querySelectorAll("input");
+				_.each(inputs, function(o){
 					if(select.indexOf(o.value) > -1){
-						o.selected = true
-						o.setAttribute("selected", "selected")
+						o.checked = true;
 					}else{
-						o.selected = false;
-						o.removeAttribute("selected")
+						o.checked = false;
 					}
 				})
 			},
 
-			onDomainSelectionChanged: function(){
+			onDomainSelectionChanged: function(e){
 				var self = this;
-				var selection = _.map(self.$.domains.selectedOptions, function(o){
-					return o.value;
-				})
+				var ctlKey = e.ctlKey || e.metaKey;
+				//console.log("e", e, e.currentTarget.value)
+				if(ctlKey || !e.currentTarget.checked){
+					var selection = _.map(self.$.domains.querySelectorAll("input:checked"), function(o){
+						return o.value;
+					})
+				}else{
+					var currentValue = e.currentTarget.value;
+					_.each(self.$.domains.querySelectorAll("input:checked"), function(o){
+						if(o.value != currentValue)
+							o.checked = false;
+					})
+					var selection = [currentValue];
+				}
 
 				if(!selection.length){
 					selection = ["all"];
@@ -521,7 +558,10 @@
 					self.selectedDomains[a] = 1;
 				})
 
-				self.listChanged();
+				self.job("onDomainSelectionChanged", function(){
+					self.listChanged();
+				}, 100)
+				
 			},
 
 			listChanged : function() {
