@@ -463,12 +463,12 @@
 			}
 		</style>
 		<div layout vertical flex>
-			<div id="domains" title="Use CTRL/CMD + Click to select multiple">
+			<div id="domains" __title="Use CTRL/CMD + Click to select multiple">
 				<label class="label">Domains :</label>
 				<label><input value="all" type="checkbox" checked="" on-click="{{onDomainSelectionChanged}}" />All</label>
-				<label><input value="main" type="checkbox" on-click="{{onDomainSelectionChanged}}" /> Main</label>
+				<label><input value="main" type="checkbox" checked on-click="{{onDomainSelectionChanged}}" /> Main</label>
 				<template repeat="{{domains as domain}}">
-					<label><input value="{{domain.name}}" type="checkbox" on-click="{{onDomainSelectionChanged}}" /> [[domain.title]]</label>
+					<label><input value="{{domain.name}}" checked type="checkbox" on-click="{{onDomainSelectionChanged}}" /> [[domain.title]]</label>
 				</template>
 			</div>
 			<div class='stats' layout horizontal>
@@ -498,6 +498,7 @@
 
 			ready : function() {
 				var self = this;
+				self.updateSelectedDomains(true);
 				self.super();
 				self.filter();
 			},
@@ -520,7 +521,7 @@
 			updateSelectedDomains: function(select){
 				var inputs = this.$.domains.querySelectorAll("input");
 				_.each(inputs, function(o){
-					if(select.indexOf(o.value) > -1){
+					if(select === true || select.indexOf(o.value) > -1){
 						o.checked = true;
 					}else{
 						o.checked = false;
@@ -530,33 +531,28 @@
 
 			onDomainSelectionChanged: function(e){
 				var self = this;
-				var ctlKey = e.ctlKey || e.metaKey;
-				//console.log("e", e, e.currentTarget.value)
-				if(ctlKey || !e.currentTarget.checked){
-					var selection = _.map(self.$.domains.querySelectorAll("input:checked"), function(o){
-						return o.value;
-					})
-				}else{
-					var currentValue = e.currentTarget.value;
-					_.each(self.$.domains.querySelectorAll("input:checked"), function(o){
-						if(o.value != currentValue)
-							o.checked = false;
-					})
-					var selection = [currentValue];
-				}
 
-				if(!selection.length){
-					selection = ["all"];
-					setTimeout(function(){
-						self.updateSelectedDomains(selection)
-					}, 100)
-					
-				}
+				var selection = _.map(self.$.domains.querySelectorAll("input:checked"), function(o){
+					return o.value;
+				})
 
 				self.selectedDomains = {};
 				_.each(selection, function(a){
 					self.selectedDomains[a] = 1;
 				})
+
+				var currentValue = e.currentTarget.value;
+				if(currentValue == "all"){
+					if(e.currentTarget.checked){
+						_.each(self.$.domains.querySelectorAll("input"), function(o){
+							self.selectedDomains[o.value] = 1;
+							o.checked = true
+						})
+					}else{
+						self.selectedDomains = {};
+						self.updateSelectedDomains([]);
+					}
+				}
 
 				self.job("onDomainSelectionChanged", function(){
 					self.listChanged();
