@@ -465,7 +465,7 @@
 		<div layout vertical flex>
 			<div id="domains" title="Use CTRL/CMD + Click to select multiple">
 				<label class="label">Domains :</label>
-				<label><input value="all" type="checkbox" on-click="{{onDomainSelectionChanged}}" />All</label>
+				<label><input value="all" type="checkbox" checked="" on-click="{{onDomainSelectionChanged}}" />All</label>
 				<label><input value="main" type="checkbox" on-click="{{onDomainSelectionChanged}}" /> Main</label>
 				<template repeat="{{domains as domain}}">
 					<label><input value="{{domain.name}}" type="checkbox" on-click="{{onDomainSelectionChanged}}" /> [[domain.title]]</label>
