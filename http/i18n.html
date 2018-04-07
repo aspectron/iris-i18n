@@ -531,17 +531,8 @@
 
 			onDomainSelectionChanged: function(e){
 				var self = this;
-
-				var selection = _.map(self.$.domains.querySelectorAll("input:checked"), function(o){
-					return o.value;
-				})
-
-				self.selectedDomains = {};
-				_.each(selection, function(a){
-					self.selectedDomains[a] = 1;
-				})
-
 				var currentValue = e.currentTarget.value;
+				self.selectedDomains = {};
 				if(currentValue == "all"){
 					if(e.currentTarget.checked){
 						_.each(self.$.domains.querySelectorAll("input"), function(o){
@@ -549,9 +540,15 @@
 							o.checked = true
 						})
 					}else{
-						self.selectedDomains = {};
 						self.updateSelectedDomains([]);
 					}
+				}else{
+					if(!e.currentTarget.checked)
+						self.$.domains.querySelector("input[value='all']").checked = false;
+
+					_.each(self.$.domains.querySelectorAll("input:checked"), function(o){
+						self.selectedDomains[o.value] = 1;
+					})
 				}
 
 				self.job("onDomainSelectionChanged", function(){
