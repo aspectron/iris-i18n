@@ -415,7 +415,7 @@ function i18n(core) {
             var sig = req.body.sig;
             var challenge = req.session.i18n_challenge;
             if(!user || !sig || !user.length || !sig.length || !challenge)
-                return res.status(401).end();
+                return res.status(200).json({error: "Invalid request (NCH)"});
 
             var info = self.clientIPs[ip];
             if(!info) {
@@ -436,11 +436,11 @@ function i18n(core) {
                 info.ts = ts;
                 user  = self.users[user];
                 if(!user || !user.pass)
-                    return res.status(401).end();
+                    return res.status(200).json({error: "User not found"});
 
                 var lsig = crypto.createHmac('sha256', new Buffer(challenge, 'hex')).update(new Buffer(user.pass, 'hex')).digest('hex');
                 if(sig != lsig)
-                    return res.status(401).end();
+                    return res.status(200).json({error: "Invalid User"});
 
                 req.session.i18n_user = user;
                 return res.status(200).json({ ack : challenge });
