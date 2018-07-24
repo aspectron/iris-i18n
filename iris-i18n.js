@@ -209,6 +209,7 @@ function i18n(core) {
             }
             else if(prop == 'domain') {
                 e.domains.push(v);
+                self.domains[v] = 1;
             }
             else
             if(prop == 'locale') {
