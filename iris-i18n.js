@@ -878,16 +878,18 @@ function i18n(core) {
         }        
     }
 
-    scanFolders(core.appFolder, self.config.folders.slice(), [] , function (err, files) {
-        if (err) return callback(err, self.entries);
+    if(self.config.disableFolderScan !== true){
+        scanFolders(core.appFolder, self.config.folders.slice(), [] , function (err, files) {
+            if (err) return callback(err, self.entries);
 
-        digestFiles(files, function (err) {
-            if(self.flush) {
-                self.flush = false;
-                self.storeEntries();
-            }
+            digestFiles(files, function (err) {
+                if(self.flush) {
+                    self.flush = false;
+                    self.storeEntries();
+                }
+            });
         });
-    });
+    }
 
 
      /**
